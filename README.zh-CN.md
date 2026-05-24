@@ -120,6 +120,14 @@ Coremi Team Community Lite 是一个社区工具。更大的 Coremi 产品线保
 - **Coremi VIP**：付费深度内容层。
 - **Coremi Team Community Lite**：开源本地 AI 团队工作台。
 
+## Coremi 生态
+
+Coremi Team Community Lite 是 Coremi 生态里的开源本地工作台层。
+
+- **Coremi AI**：<https://coremi.ai> — 机构研究系统。
+- **Coremi Media**：<https://coremi.media> — 公共媒体与发布层。
+- **Coremi Team Community Lite**：本仓库 — 开源本地 AI 团队工作台。
+
 ## 贡献
 
 欢迎提交 issue 和 pull request。请先阅读 [CONTRIBUTING.md](./CONTRIBUTING.md)。

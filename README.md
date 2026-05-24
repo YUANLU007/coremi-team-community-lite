@@ -120,6 +120,14 @@ Coremi Team Community Lite is a community tool. The broader Coremi product line 
 - **Coremi VIP**: paid/deep content layer.
 - **Coremi Team Community Lite**: open-source local AI team workspace.
 
+## Coremi Ecosystem
+
+Coremi Team Community Lite is the open-source local workspace layer of the broader Coremi ecosystem.
+
+- **Coremi AI**: <https://coremi.ai> — institutional research system.
+- **Coremi Media**: <https://coremi.media> — public media and publishing layer.
+- **Coremi Team Community Lite**: this repository — open-source local AI team workspace.
+
 ## Contributing
 
 Issues and pull requests are welcome. Please read [CONTRIBUTING.md](./CONTRIBUTING.md) first.
