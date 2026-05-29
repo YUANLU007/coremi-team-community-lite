@@ -24,7 +24,7 @@ export interface ParseGroupMentionsOptions extends RoleMentionLabelOptions {
 
 export function parseGroupMentions(raw: string, roles: GroupRole[], options: ParseGroupMentionsOptions = {}): ParsedGroupMention {
   const trimmed = raw.trim()
-  if (!trimmed) return { ok: false, error: '消息内容不能为空' }
+  if (!trimmed) return { ok: false, error: 'Message cannot be empty' }
 
   const allRoleIds = roles.map(role => role.id)
   if (!trimmed.includes('@')) {
@@ -47,7 +47,7 @@ export function parseGroupMentions(raw: string, roles: GroupRole[], options: Par
       continue
     }
 
-    const allMentionLabel = ['all', '所有人'].find(label => mentionMatches(trimmed, index, label))
+    const allMentionLabel = ['all', 'everyone', 'Everyone', '所有人'].find(label => mentionMatches(trimmed, index, label))
     if (allMentionLabel) {
       targetsAll = true
       index += allMentionLabel.length + 1
@@ -66,7 +66,7 @@ export function parseGroupMentions(raw: string, roles: GroupRole[], options: Par
   }
 
   const parsedContent = compactContent(content)
-  if (!parsedContent) return { ok: false, error: '消息内容不能为空' }
+  if (!parsedContent) return { ok: false, error: 'Message cannot be empty' }
 
   return {
     ok: true,

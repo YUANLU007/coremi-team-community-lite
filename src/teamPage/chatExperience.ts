@@ -60,7 +60,7 @@ export function shouldAutoReconnectRole(role: Pick<GroupRole, 'modelSource' | 's
 }
 
 export function isUnavailableRolesError(message: string): boolean {
-  return message.includes('以下人员不可用，请等待或恢复') || message.includes('人员 iframe 尚未就绪')
+  return message.includes('people are unavailable') || message.includes('member iframe is not ready') || message.includes('以下人员不可用，请等待或恢复') || message.includes('人员 iframe 尚未就绪')
 }
 
 export interface ChatStartupNotice {
@@ -72,8 +72,8 @@ export function getChatStartupNotice(chat: Pick<GroupChat, 'status'>, roles: Pic
   const hasStartingRole = roles.some(role => role.status === 'pending' || role.status === 'loading')
   if (chat.status !== 'initializing' && chat.status !== 'running' && !hasStartingRole) return undefined
   return {
-    title: '正在初始化角色',
-    body: '正在创建角色窗口，准备好后就可以继续对话。',
+    title: 'Initializing people',
+    body: 'Creating member windows. You can continue once they are ready.',
   }
 }
 
@@ -87,10 +87,10 @@ export function formatChatListTime(timestamp: number, now = Date.now()): string 
   const dayDelta = Math.round((currentDay - targetDay) / 86_400_000)
 
   if (dayDelta === 0) {
-    return new Intl.DateTimeFormat('zh-CN', { hour: '2-digit', minute: '2-digit', hour12: false }).format(target)
+    return new Intl.DateTimeFormat('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }).format(target)
   }
-  if (dayDelta === 1) return '昨天'
-  if (dayDelta === 2) return '前天'
+  if (dayDelta === 1) return 'Yesterday'
+  if (dayDelta === 2) return '2 days ago'
 
   const month = String(target.getMonth() + 1).padStart(2, '0')
   const day = String(target.getDate()).padStart(2, '0')
@@ -99,7 +99,7 @@ export function formatChatListTime(timestamp: number, now = Date.now()): string 
 }
 
 export function formatMessageTime(timestamp: number): string {
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat('en-US', {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',

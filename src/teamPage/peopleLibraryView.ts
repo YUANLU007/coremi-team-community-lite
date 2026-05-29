@@ -8,7 +8,7 @@ type AddPersonItem =
   | { key: string; source: 'library'; type: RoleTemplate['type']; roleTemplateId: string; name: string; category?: string; sourceTemplateName?: string; description?: string; systemPrompt: string; chatSites: string[]; disabledSites: Set<string> }
   | { key: string; source: 'temporary'; type: 'custom'; draftId: string; name: string; category?: string; sourceTemplateName?: string; description?: string; systemPrompt: string; chatSites: string[]; disabledSites: Set<string> }
 
-const TEMPLATE_CATEGORY_ALL = '全部'
+const TEMPLATE_CATEGORY_ALL = 'All'
 const PEOPLE_LIBRARY_PAGE_SIZE = 5
 const VISIBLE_CHAT_SITES = ['gemini', 'chatgpt', 'claude', 'deepseek'] as const
 
@@ -96,8 +96,8 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     syncPeopleLibraryTypeTabs()
     renderPeopleLibraryCategoryFilter()
     const templates = filteredPeopleLibraryTemplates()
-    deps.peopleLibrarySummaryEl.textContent = `${templates.length} 人`
-    deps.roleTemplateSelectEl.replaceChildren(new Option('不使用人员库，手动创建', ''))
+    deps.peopleLibrarySummaryEl.textContent = `${templates.length} people`
+    deps.roleTemplateSelectEl.replaceChildren(new Option('Manual person (no library template)', ''))
     for (const template of allTemplates) deps.roleTemplateSelectEl.append(new Option(template.name, template.id))
 
     deps.templateListEl.replaceChildren()
@@ -105,7 +105,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     deps.peopleLibraryPaginationEl.replaceChildren()
     if (templates.length === 0) {
       deps.peopleLibraryListEl.append(deps.emptyCard(
-        deps.state.peopleLibrarySearchQuery.trim() ? `没有匹配的${deps.state.peopleLibraryTemplateType === 'builtin' ? '内置' : '自定义'}人员` : `暂无${deps.state.peopleLibraryTemplateType === 'builtin' ? '内置' : '自定义'}人员`,
+        deps.state.peopleLibrarySearchQuery.trim() ? `No matching ${deps.state.peopleLibraryTemplateType === 'builtin' ? 'built-in' : 'custom'} people` : `No ${deps.state.peopleLibraryTemplateType === 'builtin' ? 'built-in' : 'custom'} people yet`,
         peopleLibraryEmptyBody(),
       ))
     } else {
@@ -123,11 +123,11 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   function renderTemplateEditor(): void {
     const store = deps.getStore()
     const selectedTemplate = deps.state.selectedTemplateId ? store.roleTemplatesById[deps.state.selectedTemplateId] : undefined
-    deps.templateFormTitleEl.textContent = selectedTemplate ? `编辑人员：${selectedTemplate.name}` : '新建人员'
+    deps.templateFormTitleEl.textContent = selectedTemplate ? `Edit person: ${selectedTemplate.name}` : 'New person'
     deps.templateAiDescriptionEl.value = ''
     deps.templatePersonaGenerationStatusEl.textContent = ''
     deps.generateTemplatePersonaEl.disabled = false
-    deps.generateTemplatePersonaEl.textContent = 'AI 生成'
+    deps.generateTemplatePersonaEl.textContent = 'Generate with AI'
     renderExternalModelSelect()
     if (selectedTemplate) {
       const defaultChatSite = visibleChatSite(selectedTemplate.defaultChatSite ?? store.settings.defaultChatSite)
@@ -352,16 +352,16 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     name.textContent = template.name
     const used = document.createElement('span')
     used.className = `template-type-badge template-type-${template.type}`
-    used.textContent = template.type === 'builtin' ? '内置' : '自定义'
+    used.textContent = template.type === 'builtin' ? 'Built-in' : 'Custom'
     row.append(name, used)
 
     const description = document.createElement('div')
     description.className = 'template-description'
-    description.textContent = template.description || '未填写人员库描述'
+    description.textContent = template.description || 'No library description'
     const site = document.createElement('div')
     site.className = 'template-description'
     const defaultChatSite = visibleChatSite(template.defaultChatSite ?? store.settings.defaultChatSite)
-    site.textContent = `默认模型：${templateModelLabel(template, store)}${defaultChatSite === 'chatgpt' && template.chatGptGptsUrl ? ' · GPTs' : ''}`
+    site.textContent = `Default model: ${templateModelLabel(template, store)}${defaultChatSite === 'chatgpt' && template.chatGptGptsUrl ? ' · GPTs' : ''}`
     const meta = document.createElement('div')
     meta.className = 'template-description template-meta'
     meta.textContent = templateMetaText(template)
@@ -370,7 +370,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     const edit = document.createElement('button')
     edit.type = 'button'
     edit.className = 'btn btn-ghost template-edit'
-    edit.textContent = '编辑'
+    edit.textContent = 'Edit'
     edit.addEventListener('click', event => {
       event.stopPropagation()
       openTemplateEditor(template.id)
@@ -382,7 +382,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
       const detail = document.createElement('button')
       detail.type = 'button'
       detail.className = 'btn btn-ghost template-detail'
-      detail.textContent = '详情'
+      detail.textContent = 'Details'
       detail.addEventListener('click', event => {
         event.stopPropagation()
         openBuiltinTemplateDetail(template)
@@ -395,7 +395,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     const remove = document.createElement('button')
     remove.type = 'button'
     remove.className = 'btn btn-danger template-delete'
-    remove.textContent = '删除'
+    remove.textContent = 'Delete'
     remove.addEventListener('click', event => {
       event.stopPropagation()
       deleteTemplate(template)
@@ -419,11 +419,11 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     const pageCount = Math.max(1, Math.ceil(total / PEOPLE_LIBRARY_PAGE_SIZE))
     if (pageCount <= 1) return
 
-    const previous = paginationButton('上一页', deps.state.peopleLibraryPage === 0, () => {
+    const previous = paginationButton('Previous', deps.state.peopleLibraryPage === 0, () => {
       deps.state.peopleLibraryPage = Math.max(0, deps.state.peopleLibraryPage - 1)
       renderTemplates()
     })
-    const next = paginationButton('下一页', deps.state.peopleLibraryPage >= pageCount - 1, () => {
+    const next = paginationButton('Next', deps.state.peopleLibraryPage >= pageCount - 1, () => {
       deps.state.peopleLibraryPage = Math.min(pageCount - 1, deps.state.peopleLibraryPage + 1)
       renderTemplates()
     })
@@ -451,7 +451,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     deps.addLibraryPeopleListEl.replaceChildren()
     if (items.length === 0) {
       deps.addLibraryPeopleListEl.append(deps.emptyCard(
-        deps.state.addPersonSearchQuery.trim() ? `没有匹配的${deps.state.addPersonTemplateType === 'builtin' ? '内置' : '自定义'}人员` : `暂无${deps.state.addPersonTemplateType === 'builtin' ? '内置' : '自定义'}人员`,
+        deps.state.addPersonSearchQuery.trim() ? `No matching ${deps.state.addPersonTemplateType === 'builtin' ? 'built-in' : 'custom'} people` : `No ${deps.state.addPersonTemplateType === 'builtin' ? 'built-in' : 'custom'} people yet`,
         addPersonEmptyBody(),
       ))
       return
@@ -478,10 +478,10 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
       name.textContent = item.name
       const description = document.createElement('div')
       description.className = 'template-description'
-      description.textContent = item.description || '未填写描述'
+      description.textContent = item.description || 'No description'
       const site = document.createElement('div')
       site.className = 'template-description'
-      site.textContent = item.chatSites.length === 0 ? '所有可用站点已添加' : item.source === 'temporary' ? '临时人员' : addPersonMetaText(item)
+      site.textContent = item.chatSites.length === 0 ? 'All available sites already added' : item.source === 'temporary' ? 'Temporary person' : addPersonMetaText(item)
       content.append(name, description, site)
       label.append(checkbox, content, addPersonSiteControl(item.key, item.chatSites, item.disabledSites))
       deps.addLibraryPeopleListEl.append(label)
@@ -534,8 +534,8 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   }
 
   function peopleLibraryEmptyBody(): string {
-    if (deps.state.peopleLibraryCategory !== TEMPLATE_CATEGORY_ALL) return `当前分类暂无${deps.state.peopleLibraryTemplateType === 'builtin' ? '内置' : '自定义'}人员`
-    return deps.state.peopleLibraryTemplateType === 'builtin' ? '可以切换到自定义人员，或调整搜索词。' : '点击右上角新建人员，保存后会出现在这里。'
+    if (deps.state.peopleLibraryCategory !== TEMPLATE_CATEGORY_ALL) return `No ${deps.state.peopleLibraryTemplateType === 'builtin' ? 'built-in' : 'custom'} people in this category`
+    return deps.state.peopleLibraryTemplateType === 'builtin' ? 'Switch to custom people or adjust your search.' : 'Create a person from the top-right button; saved people will appear here.'
   }
 
   function syncPeopleLibraryTypeTabs(): void {
@@ -549,8 +549,8 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   function openBuiltinTemplateDetail(template: RoleTemplate): void {
     deps.state.previewTemplateId = template.id
     deps.builtinTemplateDetailTitleEl.textContent = template.name
-    deps.builtinTemplateDetailMetaEl.textContent = `${templateMetaText(template)} · 默认模型：${templateModelLabel(template, deps.getStore())}`
-    deps.builtinTemplateDetailPromptEl.textContent = template.systemPrompt || '未填写提示词'
+    deps.builtinTemplateDetailMetaEl.textContent = `${templateMetaText(template)} · Default model: ${templateModelLabel(template, deps.getStore())}`
+    deps.builtinTemplateDetailPromptEl.textContent = template.systemPrompt || 'No prompt provided'
     deps.builtinTemplateDetailModalEl.hidden = false
   }
 
@@ -643,8 +643,8 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   }
 
   function addPersonEmptyBody(): string {
-    if (deps.state.addPersonCategory !== TEMPLATE_CATEGORY_ALL) return `当前分类暂无${deps.state.addPersonTemplateType === 'builtin' ? '内置' : '自定义'}人员`
-    return deps.state.addPersonTemplateType === 'builtin' ? '可以切换到自定义人员，或调整搜索词。' : '先在人员库中新建人员，或点击右上角临时添加。'
+    if (deps.state.addPersonCategory !== TEMPLATE_CATEGORY_ALL) return `No ${deps.state.addPersonTemplateType === 'builtin' ? 'built-in' : 'custom'} people in this category`
+    return deps.state.addPersonTemplateType === 'builtin' ? 'Switch to custom people or adjust your search.' : 'Create a person in the library first, or use temporary add from the top-right button.'
   }
 
   function syncAddPersonTypeTabs(): void {
@@ -737,33 +737,33 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   }
 
   function validatePersonDraft(draft: Pick<TemplateDraft, 'name' | 'description' | 'systemPrompt'>): string | undefined {
-    if (!draft.name) return '人员名称不能为空'
-    if (Array.from(draft.name).length > ROLE_NAME_MAX_CHARACTERS) return `人员名称最多 ${ROLE_NAME_MAX_CHARACTERS} 个字`
+    if (!draft.name) return 'Person name is required'
+    if (Array.from(draft.name).length > ROLE_NAME_MAX_CHARACTERS) return `Person name can be at most ${ROLE_NAME_MAX_CHARACTERS} characters`
     return undefined
   }
 
   async function generateTemplatePersona(): Promise<void> {
     const description = deps.templateAiDescriptionEl.value.trim()
     if (!description) {
-      deps.showError('请先描述想要生成的人设')
+      deps.showError('Describe the persona you want to generate first')
       return
     }
 
     deps.generateTemplatePersonaEl.disabled = true
-    deps.generateTemplatePersonaEl.textContent = '生成中'
-    deps.templatePersonaGenerationStatusEl.textContent = '生成中...'
+    deps.generateTemplatePersonaEl.textContent = 'Generating'
+    deps.templatePersonaGenerationStatusEl.textContent = 'Generating...'
     try {
       const persona = await deps.generatePersona(description)
       deps.templateNameEl.value = persona.name
       deps.templateDescriptionEl.value = persona.description
       deps.templatePromptEl.value = persona.systemPrompt
-      deps.templatePersonaGenerationStatusEl.textContent = '已生成，可继续修改后保存'
+      deps.templatePersonaGenerationStatusEl.textContent = 'Generated. You can edit and save it.'
     } catch (error) {
       deps.templatePersonaGenerationStatusEl.textContent = ''
       throw error
     } finally {
       deps.generateTemplatePersonaEl.disabled = false
-      deps.generateTemplatePersonaEl.textContent = 'AI 生成'
+      deps.generateTemplatePersonaEl.textContent = 'Generate with AI'
     }
   }
 
@@ -822,7 +822,7 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
     const models = externalModels(deps.getStore())
     deps.templateExternalModelSelectEl.replaceChildren()
     if (models.length === 0) {
-      deps.templateExternalModelSelectEl.append(new Option('先在设置中添加外部模型', ''))
+      deps.templateExternalModelSelectEl.append(new Option('Add an external model in settings first', ''))
       deps.templateSiteExternalEl.disabled = true
       return
     }
@@ -862,13 +862,13 @@ export function createPeopleLibraryView(deps: PeopleLibraryViewDependencies): Pe
   async function addPeopleToCurrentChat(items: Record<string, unknown>[]): Promise<void> {
     const chat = deps.getCurrentChat()
     if (!chat) return
-    if (items.length === 0) throw new Error('请选择或填写要添加的人员')
+    if (items.length === 0) throw new Error('Select or fill in people to add')
     await deps.runCommand('GROUP_ROLES_CREATE_BATCH', { chatId: chat.id, items })
   }
 
   function deleteTemplate(template: RoleTemplate): void {
     if (isTemplateUsed(template.id)) return
-    if (!window.confirm(`确定删除「${template.name}」吗？删除后这个人员会从人员库移除。`)) return
+    if (!window.confirm(`Delete "${template.name}" from the people library?`)) return
     if (deps.state.selectedTemplateId === template.id) closeTemplateEditor()
     deps.runCommand('ROLE_TEMPLATE_DELETE', { templateId: template.id }).catch(error => deps.showError(error instanceof Error ? error.message : String(error)))
   }
@@ -895,11 +895,11 @@ function templateModelLabel(template: RoleTemplate, store: OpenTeamStore): strin
 }
 
 function externalModelLabel(model: ExternalModelConfig | undefined): string {
-  return model ? `API · ${model.name}` : 'API · 未配置'
+  return model ? `API · ${model.name}` : 'API · not configured'
 }
 
 function templateTypeLabel(type: RoleTemplate['type']): string {
-  return type === 'builtin' ? '内置人员' : '自定义人员'
+  return type === 'builtin' ? 'Built-in person' : 'Custom person'
 }
 
 function templateMetaText(template: RoleTemplate): string {
@@ -976,6 +976,6 @@ function chatSiteFromModelKey(key: string): ChatSite {
 
 function personaGenerationErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
-  if (message === 'Unknown OpenTeam message') return 'AI 生成人设需要重新加载 OpenTeam 扩展后再使用'
+  if (message === 'Unknown OpenTeam message') return 'Reload the Coremi Team extension before using AI persona generation'
   return message
 }

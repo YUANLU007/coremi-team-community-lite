@@ -163,7 +163,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
 
     deps.createChatFormEl.addEventListener('submit', event => {
       event.preventDefault()
-      const name = deps.newChatNameEl.value.trim() || '新群聊'
+      const name = deps.newChatNameEl.value.trim() || 'New chat'
       const mode = readNewChatMode()
       deps.newChatNameEl.value = ''
       setChatCreatePopoverVisible(false)
@@ -296,7 +296,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
     if (risk) titleRow.append(risk)
     const count = document.createElement('span')
     count.className = 'group-template-role-count'
-    count.textContent = `${template.roles.length} 个角色`
+    count.textContent = `${template.roles.length} roles`
     heading.append(titleRow, count)
     const category = document.createElement('span')
     category.className = 'group-template-category'
@@ -310,7 +310,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
 
     const meta = document.createElement('span')
     meta.className = 'group-template-meta'
-    meta.textContent = `适用：${template.userTypes.slice(0, 3).join('、')}`
+    meta.textContent = `Best for: ${template.userTypes.slice(0, 3).join(', ')}`
 
     const roles = document.createElement('span')
     roles.className = 'group-template-roles'
@@ -330,16 +330,16 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
     empty.className = 'group-template-empty'
 
     const title = document.createElement('strong')
-    title.textContent = '没有找到匹配的小组'
+    title.textContent = 'No matching teams found'
     const description = document.createElement('p')
-    description.textContent = '可以试试换个说法，例如搜索「写论文」「合同」「面试」「投放」「装修」。'
+    description.textContent = 'Try another phrase, such as paper, contract, interview, ads, or renovation.'
     const actions = document.createElement('div')
     actions.className = 'group-template-empty-actions'
 
     const clearSearch = document.createElement('button')
     clearSearch.type = 'button'
     clearSearch.className = 'btn btn-ghost'
-    clearSearch.textContent = '清空搜索'
+    clearSearch.textContent = 'Clear search'
     clearSearch.addEventListener('click', () => {
       const searchEl = requireElement<HTMLInputElement>('#group-template-search')
       groupTemplateSearchQuery = ''
@@ -352,7 +352,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
     const showAll = document.createElement('button')
     showAll.type = 'button'
     showAll.className = 'btn btn-ghost'
-    showAll.textContent = '查看全部模板'
+    showAll.textContent = 'View all templates'
     showAll.addEventListener('click', () => {
       const searchEl = requireElement<HTMLInputElement>('#group-template-search')
       const categoriesEl = requireElement<HTMLElement>('#group-template-categories')
@@ -375,7 +375,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
     if (template.riskLevel === 'normal') return undefined
     const label = document.createElement('span')
     label.className = `group-template-risk group-template-risk-${template.riskLevel}`
-    label.textContent = template.riskLevel === 'professional' ? '专业边界' : '需谨慎'
+    label.textContent = template.riskLevel === 'professional' ? 'Professional boundary' : 'Use carefully'
     return label
   }
 
@@ -395,7 +395,7 @@ export function createTeamUiController(deps: TeamUiControllerDependencies): Team
   function updateGroupTemplateConfirmButton(confirmButton: HTMLButtonElement): void {
     const template = selectedGroupTemplateId ? getBuiltinGroupTemplate(selectedGroupTemplateId) : undefined
     confirmButton.disabled = !template
-    confirmButton.textContent = template?.riskLevel === 'professional' ? '了解限制并创建' : '确认创建'
+    confirmButton.textContent = template?.riskLevel === 'professional' ? 'Acknowledge limits and create' : 'Create'
   }
 
   function readNewChatMode(): RoomMode {

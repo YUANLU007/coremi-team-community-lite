@@ -41,11 +41,11 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
   function renderChatList() {
     const store = deps.getStore()
     const chats = store.chatOrder.map(chatId => store.chatsById[chatId]).filter((chat): chat is GroupChat => Boolean(chat))
-    deps.storeSummaryEl.textContent = `${chats.length} 个群聊 · ${deps.getTemplates().length} 个人员库人员`
+    deps.storeSummaryEl.textContent = `${chats.length} chats · ${deps.getTemplates().length} library people`
     deps.chatListEl.replaceChildren()
 
     if (chats.length === 0) {
-      deps.chatListEl.append(deps.emptyCard('还没有群聊', '在上方创建一个群聊，然后从人员库添加人员。'))
+      deps.chatListEl.append(deps.emptyCard('No chats yet', 'Create a chat above, then add people from the library.'))
       return
     }
 
@@ -55,7 +55,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
       item.className = `chat-item${chat.id === deps.state.selectedChatId ? ' active' : ''}${hasActivity ? ' has-activity' : ''}`
       item.tabIndex = 0
       item.setAttribute('role', 'button')
-      item.setAttribute('aria-label', `切换到 ${chat.name}`)
+      item.setAttribute('aria-label', `Switch to ${chat.name}`)
       item.addEventListener('click', () => switchChat(chat.id))
       item.addEventListener('keydown', event => {
         if (event.key !== 'Enter' && event.key !== ' ') return
@@ -79,7 +79,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
       const menuButton = document.createElement('button')
       menuButton.type = 'button'
       menuButton.className = 'icon-btn chat-menu-btn'
-      menuButton.setAttribute('aria-label', `打开 ${chat.name} 的群聊菜单`)
+      menuButton.setAttribute('aria-label', `Open ${chat.name} chat menu`)
       menuButton.textContent = '⋯'
       menuButton.addEventListener('click', event => {
         event.stopPropagation()
@@ -138,9 +138,9 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
     const rename = document.createElement('button')
     rename.type = 'button'
     rename.className = 'btn btn-ghost'
-    rename.textContent = '编辑名称'
+    rename.textContent = 'Rename'
     rename.addEventListener('click', () => {
-      const nextName = window.prompt('编辑群聊名称', chat.name)?.trim()
+      const nextName = window.prompt('Rename chat', chat.name)?.trim()
       deps.state.chatMenuChatId = undefined
       if (!nextName) {
         renderChatList()
@@ -151,7 +151,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
     const duplicate = document.createElement('button')
     duplicate.type = 'button'
     duplicate.className = 'btn btn-ghost'
-    duplicate.textContent = '复制群聊'
+    duplicate.textContent = 'Duplicate chat'
     duplicate.addEventListener('click', () => {
       deps.state.chatMenuChatId = undefined
       renderChatList()
@@ -160,7 +160,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
     const exportRecord = document.createElement('button')
     exportRecord.type = 'button'
     exportRecord.className = 'btn btn-ghost'
-    exportRecord.textContent = '导出记录'
+    exportRecord.textContent = 'Export record'
     exportRecord.addEventListener('click', () => {
       deps.state.chatMenuChatId = undefined
       renderChatList()
@@ -169,17 +169,17 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
     const clearMessages = document.createElement('button')
     clearMessages.type = 'button'
     clearMessages.className = 'btn btn-ghost'
-    clearMessages.textContent = '清空消息'
+    clearMessages.textContent = 'Clear messages'
     clearMessages.addEventListener('click', () => {
       deps.state.chatMenuChatId = undefined
       renderChatList()
-      if (!window.confirm(`确定清空「${chat.name}」的聊天消息吗？人员会保留，但所有 iframe 会重新创建。`)) return
+      if (!window.confirm(`Clear all messages in "${chat.name}"? People will stay, but all iframes will be recreated.`)) return
       clearChatMessages(chat.id).catch(error => deps.showError(error.message))
     })
     const closeFrames = document.createElement('button')
     closeFrames.type = 'button'
     closeFrames.className = 'btn btn-ghost'
-    closeFrames.textContent = '关闭群聊'
+    closeFrames.textContent = 'Close chat frames'
     closeFrames.addEventListener('click', () => {
       deps.state.chatMenuChatId = undefined
       renderChatList()
@@ -188,11 +188,11 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
     const remove = document.createElement('button')
     remove.type = 'button'
     remove.className = 'btn btn-ghost btn-danger'
-    remove.textContent = '删除群聊'
+    remove.textContent = 'Delete chat'
     remove.addEventListener('click', () => {
       deps.state.chatMenuChatId = undefined
       renderChatList()
-      if (!window.confirm(`确定删除「${chat.name}」吗？删除后这个群聊的消息和角色都会移除。`)) return
+      if (!window.confirm(`Delete "${chat.name}"? Its messages and people will be removed.`)) return
       deleteChat(chat.id).catch(error => deps.showError(error.message))
     })
     menu.append(rename, duplicate, exportRecord, clearMessages, closeFrames, remove)
@@ -211,7 +211,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
       link.click()
       window.setTimeout(() => URL.revokeObjectURL(url), 0)
     } catch (error) {
-      deps.showError(error instanceof Error ? error.message : '导出群聊记录失败')
+      deps.showError(error instanceof Error ? error.message : 'Failed to export chat record')
     }
   }
 
@@ -240,7 +240,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
         await deleteChatFromLocalStore(chatId)
         return
       }
-      throw new Error(response.error || '删除群聊失败')
+      throw new Error(response.error || 'Failed to delete chat')
     }
     deps.iframeHost.removeChat(chatId)
     deps.applyStore(response.store ?? createDefaultStore())
@@ -249,7 +249,7 @@ export function createChatListView(deps: ChatListViewDependencies): ChatListView
   async function deleteChatFromLocalStore(chatId: string): Promise<void> {
     const nextStore = await loadStore()
     const chat = nextStore.chatsById[chatId]
-    if (!chat) throw new Error(`找不到群聊：${chatId}`)
+    if (!chat) throw new Error(`Chat not found: ${chatId}`)
 
     for (const roleId of chat.roleIds) delete nextStore.rolesById[roleId]
     for (const messageId of chat.messageIds) delete nextStore.messagesById[messageId]

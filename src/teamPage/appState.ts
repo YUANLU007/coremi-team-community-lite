@@ -67,10 +67,10 @@ export function createTeamPageState(): TeamPageState {
     peopleLibraryPage: 0,
     peopleLibraryTemplateType: 'custom',
     peopleLibrarySearchQuery: '',
-    peopleLibraryCategory: '全部',
+    peopleLibraryCategory: 'All',
     addPersonTemplateType: 'custom',
     addPersonSearchQuery: '',
-    addPersonCategory: '全部',
+    addPersonCategory: 'All',
     notesPanelOpen: false,
     activeNoteScope: 'chat',
   }

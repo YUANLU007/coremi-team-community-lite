@@ -70,45 +70,45 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     const thinking = getVisibleThinkingRoles(roles)
 
     if (!chat) {
-      deps.targetPreviewEl.textContent = '选择群聊后可发送'
+      deps.targetPreviewEl.textContent = 'Select a chat to send'
       deps.sendButtonEl.disabled = true
     } else if (roles.length === 0) {
-      deps.targetPreviewEl.textContent = '当前群聊还没有人员'
+      deps.targetPreviewEl.textContent = 'This chat has no people yet'
       deps.sendButtonEl.disabled = true
     } else if (!raw && deps.state.pendingAttachments.length === 0) {
-      deps.targetPreviewEl.textContent = '输入消息或添加附件；不 @ 仅记录，@ 人员触发回复'
+      deps.targetPreviewEl.textContent = 'Type a message or add attachments; without @ it is only saved, @ people to request replies'
       deps.sendButtonEl.disabled = true
     } else if (!parsed.ok) {
       deps.targetPreviewEl.textContent = parsed.error
       deps.sendButtonEl.disabled = true
     } else if (targets.length === 0) {
-      deps.targetPreviewEl.textContent = '将作为群消息记录，不触发 AI；@ 人员可触发回复'
+      deps.targetPreviewEl.textContent = 'Saved as a room note; @ people to trigger AI replies'
       deps.sendButtonEl.disabled = false
     } else if (reconnecting.length > 0) {
       const readyTargets = targets.filter(role => !reconnecting.includes(role) && role.status === 'ready')
       deps.targetPreviewEl.textContent = readyTargets.length > 0
-        ? `将发送给：${readyTargets.map(roleDisplayName).join('、')}；正在连接：${reconnecting.map(roleDisplayName).join('、')}`
-        : `正在自动连接：${reconnecting.map(roleDisplayName).join('、')}`
+        ? `Will send to: ${readyTargets.map(roleDisplayName).join(', ')}; reconnecting: ${reconnecting.map(roleDisplayName).join(', ')}`
+        : `Auto-reconnecting: ${reconnecting.map(roleDisplayName).join(', ')}`
       deps.sendButtonEl.disabled = readyTargets.length === 0
     } else if (unavailable.length > 0) {
       const waiting = unavailable.filter(role => !shouldAutoReconnectRole(role))
       const readyTargets = targets.filter(role => role.status === 'ready')
       if (waiting.length > 0 && readyTargets.length === 0) {
-        deps.targetPreviewEl.textContent = `请稍等：${waiting.map(roleDisplayName).join('、')} 正在回复`
+        deps.targetPreviewEl.textContent = `Please wait: ${waiting.map(roleDisplayName).join(', ')} is replying`
         deps.sendButtonEl.disabled = true
       } else if (waiting.length > 0) {
-        deps.targetPreviewEl.textContent = `将发送给：${readyTargets.map(roleDisplayName).join('、')}；跳过正在回复：${waiting.map(roleDisplayName).join('、')}`
+        deps.targetPreviewEl.textContent = `Will send to: ${readyTargets.map(roleDisplayName).join(', ')}; skipping replying people: ${waiting.map(roleDisplayName).join(', ')}`
         deps.sendButtonEl.disabled = false
       } else {
-        deps.targetPreviewEl.textContent = `将先自动连接：${unavailable.map(roleDisplayName).join('、')}`
+        deps.targetPreviewEl.textContent = `Will reconnect first: ${unavailable.map(roleDisplayName).join(', ')}`
         deps.sendButtonEl.disabled = false
       }
     } else {
-      deps.targetPreviewEl.textContent = `将发送给：${targets.map(roleDisplayName).join('、')}`
+      deps.targetPreviewEl.textContent = `Will send to: ${targets.map(roleDisplayName).join(', ')}`
       deps.sendButtonEl.disabled = false
     }
 
-    deps.busyPreviewEl.textContent = thinking.length > 0 ? `正在回复：${thinking.map(roleDisplayName).join('、')}` : ''
+    deps.busyPreviewEl.textContent = thinking.length > 0 ? `Replying: ${thinking.map(roleDisplayName).join(', ')}` : ''
   }
 
   function renderAttachmentPreview(): void {
@@ -138,7 +138,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
       const remove = document.createElement('button')
       remove.type = 'button'
       remove.className = 'attachment-chip-remove'
-      remove.setAttribute('aria-label', `移除 ${attachment.name}`)
+      remove.setAttribute('aria-label', `Remove ${attachment.name}`)
       remove.textContent = '×'
       remove.addEventListener('click', () => {
         deps.state.pendingAttachments = deps.state.pendingAttachments.filter(item => item.id !== attachment.id)
@@ -159,12 +159,12 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     deps.referenceDraftEl.hidden = false
     const preview = document.createElement('div')
     preview.className = 'reference-draft-preview'
-    preview.textContent = `引用 ${deps.state.selectedReference.roleName || '人员'}：${deps.state.selectedReference.contentSnapshot}`
+    preview.textContent = `Quote ${deps.state.selectedReference.roleName || 'person'}: ${deps.state.selectedReference.contentSnapshot}`
 
     const cancel = document.createElement('button')
     cancel.type = 'button'
     cancel.className = 'btn btn-ghost'
-    cancel.setAttribute('aria-label', '取消引用')
+    cancel.setAttribute('aria-label', 'Cancel quote')
     cancel.textContent = '×'
     cancel.addEventListener('click', () => {
       deps.state.selectedReference = undefined
@@ -193,9 +193,9 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
       site.className = 'mention-site-badge'
       if (mentionOption.type === 'all') {
         avatar.className = 'mention-avatar mention-avatar-all'
-        avatar.textContent = '全'
-        name.textContent = '所有人'
-        site.textContent = '全员'
+        avatar.textContent = 'A'
+        name.textContent = 'Everyone'
+        site.textContent = 'All'
         option.addEventListener('click', () => insertAllMention())
       } else {
         const role = mentionOption.role
@@ -267,7 +267,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     const raw = deps.messageInputEl.value.trim()
     const attachments = [...deps.state.pendingAttachments]
     if (!chat || (!raw && attachments.length === 0)) return
-    const rawForSend = raw || '（附件）'
+    const rawForSend = raw || '(attachment)'
 
     const targetResult = resolveMessageTargets(rawForSend, deps.getCurrentRoles())
     if (!targetResult.ok) {
@@ -278,7 +278,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     const waitingRoles = targetResult.roles.filter(role => role.status === 'thinking' && !shouldAutoReconnectRole(role))
     const readyRoles = targetResult.roles.filter(role => role.status === 'ready')
     if (waitingRoles.length > 0 && readyRoles.length === 0) {
-      deps.showError(`请等待人员回复完成：${waitingRoles.map(roleDisplayName).join('、')}`)
+      deps.showError(`Please wait for replies to finish: ${waitingRoles.map(roleDisplayName).join(', ')}`)
       return
     }
 
@@ -320,11 +320,11 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
   async function addAttachments(files: File[]): Promise<void> {
     if (files.length === 0) return
     const remaining = MAX_ATTACHMENTS_PER_MESSAGE - deps.state.pendingAttachments.length
-    if (remaining <= 0) throw new Error(`每条消息最多添加 ${MAX_ATTACHMENTS_PER_MESSAGE} 个附件`)
+    if (remaining <= 0) throw new Error(`Each message can include up to ${MAX_ATTACHMENTS_PER_MESSAGE} attachments`)
     const accepted = files.slice(0, remaining)
     const attachments = await Promise.all(accepted.map(fileToAttachment))
     deps.state.pendingAttachments = [...deps.state.pendingAttachments, ...attachments]
-    if (files.length > remaining) deps.showError(`已添加前 ${remaining} 个附件；每条消息最多 ${MAX_ATTACHMENTS_PER_MESSAGE} 个`)
+    if (files.length > remaining) deps.showError(`Added the first ${remaining} attachments; each message can include up to ${MAX_ATTACHMENTS_PER_MESSAGE}`)
     renderComposerState()
   }
 
@@ -368,7 +368,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
   }
 
   function insertAllMention(): void {
-    insertMentionLabel('所有人')
+    insertMentionLabel('Everyone')
   }
 
   function insertMentionLabel(label: string): void {
@@ -419,7 +419,7 @@ function readFileAsDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.addEventListener('load', () => resolve(String(reader.result ?? '')))
-    reader.addEventListener('error', () => reject(reader.error ?? new Error('读取附件失败')))
+    reader.addEventListener('error', () => reject(reader.error ?? new Error('Failed to read attachment')))
     reader.readAsDataURL(file)
   })
 }

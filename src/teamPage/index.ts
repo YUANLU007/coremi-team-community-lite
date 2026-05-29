@@ -77,14 +77,14 @@ const sendRuntimeMessage = runtimeClient.sendRuntimeMessage
 const runCommand = runtimeClient.runCommand
 async function generatePersona(description: string): Promise<GeneratedPersonDraft> {
   const response = await sendRuntimeMessage('ROLE_TEMPLATE_PERSONA_GENERATE', { description }) as Awaited<ReturnType<typeof sendRuntimeMessage>> & { persona?: GeneratedPersonDraft }
-  if (response.ok === false) throw new Error(response.error || 'AI 生成人设失败')
-  if (!response.persona) throw new Error('AI 生成人设返回格式无效')
+  if (response.ok === false) throw new Error(response.error || 'AI persona generation failed')
+  if (!response.persona) throw new Error('AI persona generation returned an invalid format')
   return response.persona
 }
 
 async function testExternalModel(modelId: string): Promise<void> {
   const response = await sendRuntimeMessage('EXTERNAL_MODEL_TEST', { modelId })
-  if (response.ok === false) throw new Error(response.error || '外部模型测试失败')
+  if (response.ok === false) throw new Error(response.error || 'External model test failed')
 }
 
 let renderComposerState = (): void => {}
@@ -450,7 +450,7 @@ async function resolveHostTabId(): Promise<void> {
 async function refreshStore(showFailure = true): Promise<void> {
   try {
     const response = await sendRuntimeMessage('GROUP_STORE_GET')
-    if (response.ok === false) throw new Error(response.error || '读取群聊数据失败')
+    if (response.ok === false) throw new Error(response.error || 'Failed to read team chat data')
     applyStore(response.store ?? createDefaultStore())
   } catch (error) {
     applyStore(createDefaultStore())
@@ -521,7 +521,7 @@ function handlePrimaryModeChange(isPrimary: boolean): void {
   }
 
   log.warn('team-page-primary:passive', { hostTabId: appState.hostTabId })
-  showError('已检测到另一个 OpenTeam 页面正在运行。当前页面已暂停 AI iframe，避免两个页面同时加载导致卡死。')
+  showError('Another Coremi Team page is already running. This page paused its AI iframes to avoid two pages loading them at the same time.')
 }
 
 function render(): void {
@@ -576,7 +576,7 @@ function handleRoleRecoveryRequest(message: Extract<StorePushMessage, { type: 'G
       hasRole: Boolean(role),
       roleChatId: role?.chatId,
     })
-    sendResponse({ ok: false, error: '找不到要恢复的人员' })
+    sendResponse({ ok: false, error: 'Person to restore was not found' })
     return
   }
   log.warn('orchestration-diagnostic:role-recovery:start', {

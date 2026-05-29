@@ -45,7 +45,7 @@ export function createExternalModelsView(deps: ExternalModelsViewDependencies): 
     if (models.length === 0) {
       const empty = document.createElement('div')
       empty.className = 'empty-card'
-      empty.textContent = '暂无外部模型'
+      empty.textContent = 'No external models yet'
       deps.externalModelsListEl.append(empty)
       return
     }
@@ -74,17 +74,17 @@ export function createExternalModelsView(deps: ExternalModelsViewDependencies): 
     const edit = document.createElement('button')
     edit.type = 'button'
     edit.className = 'btn btn-ghost'
-    edit.textContent = '编辑'
+    edit.textContent = 'Edit'
     edit.addEventListener('click', () => fillForm(model))
     const test = document.createElement('button')
     test.type = 'button'
     test.className = 'btn btn-ghost'
-    test.textContent = '测试'
+    test.textContent = 'Test'
     test.addEventListener('click', () => testModel(model, test))
     const remove = document.createElement('button')
     remove.type = 'button'
     remove.className = 'btn btn-danger'
-    remove.textContent = '删除'
+    remove.textContent = 'Delete'
     remove.addEventListener('click', () => deleteModel(model))
     actions.append(test, edit, remove)
     card.append(body, actions)
@@ -106,7 +106,7 @@ export function createExternalModelsView(deps: ExternalModelsViewDependencies): 
   }
 
   function deleteModel(model: ExternalModelConfig): void {
-    if (!window.confirm(`确定删除外部模型「${model.name}」吗？`)) return
+    if (!window.confirm(`Delete external model "${model.name}"?`)) return
     deps.runCommand('EXTERNAL_MODEL_DELETE', { modelId: model.id })
       .then(() => {
         resetForm()
@@ -116,12 +116,12 @@ export function createExternalModelsView(deps: ExternalModelsViewDependencies): 
   }
 
   async function testModel(model: ExternalModelConfig, button: HTMLButtonElement): Promise<void> {
-    const originalText = button.textContent ?? '测试'
+    const originalText = button.textContent ?? 'Test'
     button.disabled = true
-    button.textContent = '测试中'
+    button.textContent = 'Testing'
     try {
       await deps.testExternalModel(model.id)
-      button.textContent = '测试通过'
+      button.textContent = 'Passed'
     } catch (error) {
       button.textContent = originalText
       deps.showError(error instanceof Error ? error.message : String(error))

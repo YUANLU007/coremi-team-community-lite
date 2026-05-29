@@ -237,7 +237,7 @@ export function createOrchestrationCanvas(deps: OrchestrationCanvasDependencies)
         const roleLabel = parallelRoleLabel(roleNames)
         const firstSiteLabel = stage.roleIds[0] ? getRoleSiteLabel?.(stage.roleIds[0]).trim() : ''
         const siteLabel = stage.roleIds.length > 1
-          ? `${firstSiteLabel ? `${firstSiteLabel} · ` : ''}${stage.roleIds.length} 人并行`
+          ? `${firstSiteLabel ? `${firstSiteLabel} · ` : ''}${stage.roleIds.length} people in parallel`
           : firstSiteLabel
         const isReview = stage.kind === 'review'
         const selected = selectedStageId === stage.id
@@ -329,8 +329,8 @@ function buildEdge(edge: OrchestrationGraphSnapshot['edges'][number], stages: Or
 }
 
 function parallelRoleLabel(roleNames: string[]): string {
-  if (roleNames.length === 0) return '未选择人员'
-  if (roleNames.length === 1) return roleNames[0] ?? '未选择人员'
+  if (roleNames.length === 0) return 'No person selected'
+  if (roleNames.length === 1) return roleNames[0] ?? 'No person selected'
   if (roleNames.length === 2) return roleNames.join(' + ')
   return `${roleNames[0]} +${roleNames.length - 1}`
 }
@@ -364,7 +364,7 @@ function edgeBranchLabel(branch: 'pass' | 'fail'): Record<string, unknown> {
     position: 0.55,
     attrs: {
       label: {
-        text: failBranch ? '不通过' : '通过',
+        text: failBranch ? 'Fail' : 'Pass',
         fill: 'var(--orchestration-edge-label-text)',
         fontSize: 9,
         fontWeight: 720,
@@ -489,7 +489,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 export function stageRoleLabel(stage: OrchestrationStage, rolesById: Record<string, GroupRole>): string {
-  return stage.roleIds.map(roleId => rolesById[roleId]?.name ?? '未知人员').join(' + ')
+  return stage.roleIds.map(roleId => rolesById[roleId]?.name ?? 'Unknown person').join(' + ')
 }
 
 export function arrangeOrchestrationGraph(stages: OrchestrationStage[], edges: OrchestrationGraphSnapshot['edges']): { stages: OrchestrationStage[]; edges: OrchestrationGraphSnapshot['edges'] } {

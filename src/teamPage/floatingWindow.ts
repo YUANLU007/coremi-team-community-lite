@@ -74,8 +74,8 @@ export function createFloatingWindowControls(deps: FloatingWindowDependencies): 
     deps.appShellEl.classList.toggle('fullscreen', fullscreen)
     deps.toggleFullscreenEl.textContent = fullscreen ? '⤡' : '⛶'
     deps.toggleFullscreenEl.setAttribute('aria-pressed', String(fullscreen))
-    deps.toggleFullscreenEl.setAttribute('aria-label', fullscreen ? '退出全屏' : '全屏窗口')
-    deps.toggleFullscreenEl.title = fullscreen ? '退出全屏' : '全屏窗口'
+    deps.toggleFullscreenEl.setAttribute('aria-label', fullscreen ? 'Exit fullscreen' : 'Fullscreen window')
+    deps.toggleFullscreenEl.title = fullscreen ? 'Exit fullscreen' : 'Fullscreen window'
   }
 
   function registerFloatingWindowControls(): void {

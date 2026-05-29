@@ -77,7 +77,7 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<Map<string, ZipEntry
   const bytes = new Uint8Array(buffer)
   const view = new DataView(buffer)
   const eocdOffset = findEndOfCentralDirectory(view)
-  if (eocdOffset < 0) throw new Error('无法读取 Word 文件：不是有效的 docx zip')
+  if (eocdOffset < 0) throw new Error('Unable to read Word file: invalid DOCX zip')
   const entryCount = view.getUint16(eocdOffset + 10, true)
   let cursor = view.getUint32(eocdOffset + 16, true)
   const entries = new Map<string, ZipEntry>()
@@ -105,7 +105,7 @@ async function readZipEntries(buffer: ArrayBuffer): Promise<Map<string, ZipEntry
 
 async function readZipEntryText(entry: ZipEntry): Promise<string> {
   if (entry.method === 0) return decodeUtf8(entry.compressed)
-  if (entry.method !== 8) throw new Error(`无法读取 ${entry.name}：不支持的压缩格式`)
+  if (entry.method !== 8) throw new Error(`Unable to read ${entry.name}: unsupported compression format`)
   const compressedBuffer = entry.compressed.buffer.slice(entry.compressed.byteOffset, entry.compressed.byteOffset + entry.compressed.byteLength) as ArrayBuffer
   const stream = new Blob([compressedBuffer]).stream().pipeThrough(new DecompressionStream('deflate-raw'))
   const decompressed = await new Response(stream).arrayBuffer()

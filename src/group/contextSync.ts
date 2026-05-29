@@ -55,11 +55,11 @@ export function getContextCursorAfterAck(chat: GroupChat, messages?: GroupMessag
 
 export function formatContextMessage(message: GroupMessage): string {
   const speaker = message.type === 'assistant'
-    ? message.roleName ?? '人员'
+    ? message.roleName ?? 'Person'
     : message.type === 'user'
-      ? '用户'
-      : '系统'
-  return `${speaker}：${message.content}`
+      ? 'User'
+      : 'System'
+  return `${speaker}: ${message.content}`
 }
 
 function isMessageVisibleToRole(message: GroupMessage, roleId: string): boolean {

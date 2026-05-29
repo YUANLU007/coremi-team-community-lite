@@ -84,7 +84,7 @@ export function createRoleRecoveryController(deps: RoleRecoveryDependencies): Ro
       }
       const rejectTimeout = () => {
         cleanup()
-        reject(new Error(`等待人员恢复超时：${roleLabels(chatId, uniqueRoleIds).join('、')}`))
+        reject(new Error(`Timed out waiting for people to restore: ${roleLabels(chatId, uniqueRoleIds).join(', ')}`))
       }
       const schedulePoll = () => {
         waiter.pollTimeoutId = window.setTimeout(() => {

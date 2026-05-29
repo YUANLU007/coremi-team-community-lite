@@ -52,7 +52,7 @@ export function createAllNotesView(deps: AllNotesViewDependencies): AllNotesView
     if (items.length === 0) {
       const empty = document.createElement('div')
       empty.className = 'all-notes-empty'
-      empty.textContent = '还没有笔记'
+      empty.textContent = 'No notes yet'
       deps.allNotesListEl.append(empty)
       return
     }
@@ -199,8 +199,8 @@ export function collectNoteItems(store: OpenTeamStore): NoteListItem[] {
   items.push({
     id: 'global',
     scope: 'global',
-    title: '全局笔记',
-    meta: '手动记录',
+    title: 'Global notes',
+    meta: 'Manual notes',
     content: store.globalNote ?? EMPTY_NOTE,
     deletedChat: false,
   })
@@ -218,8 +218,8 @@ export function collectNoteItems(store: OpenTeamStore): NoteListItem[] {
       id: chatId,
       scope: 'chat',
       chatId,
-      title: chat?.name ?? `已删除群聊 ${shortId(chatId)}`,
-      meta: chat ? '群聊笔记' : '已删除群聊的笔记',
+      title: chat?.name ?? `Deleted chat ${shortId(chatId)}`,
+      meta: chat ? 'Chat notes' : 'Notes from a deleted chat',
       content,
       deletedChat: !chat,
     })

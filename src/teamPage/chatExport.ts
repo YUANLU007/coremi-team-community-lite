@@ -12,12 +12,12 @@ export function formatChatExportMarkdown(store: OpenTeamStore, chat: GroupChat, 
   const lines = [
     `# ${chat.name}`,
     '',
-    `- 导出时间：${formatExportDateTime(exportedAt)}`,
-    `- 群聊模式：${modeLabel(chat.mode)}`,
-    `- 当前成员：${roles.map(role => role.name).join('、') || '无'}`,
-    `- 消息数量：${messages.length}`,
+    `- Exported at: ${formatExportDateTime(exportedAt)}`,
+    `- Room mode: ${modeLabel(chat.mode)}`,
+    `- Current members: ${roles.map(role => role.name).join(', ') || 'none'}`,
+    `- Message count: ${messages.length}`,
     '',
-    '## 聊天记录',
+    '## Chat Record',
     '',
   ]
 
@@ -26,10 +26,10 @@ export function formatChatExportMarkdown(store: OpenTeamStore, chat: GroupChat, 
     lines.push('')
     lines.push(`> ${formatExportDateTime(new Date(message.createdAt))}`)
     lines.push('')
-    lines.push(message.content || '(空消息)')
+    lines.push(message.content || '(empty message)')
     if (message.attachments?.length) {
       lines.push('')
-      lines.push('附件：')
+      lines.push('Attachments:')
       for (const attachment of message.attachments) {
         lines.push(`- ${attachment.name} (${attachment.mimeType || attachment.kind}, ${formatBytes(attachment.size)})`)
         if (attachment.textPreview?.trim()) {
@@ -58,15 +58,15 @@ export function safeChatExportFilename(chatName: string, exportedAt = new Date()
 }
 
 function messageSenderLabel(store: OpenTeamStore, message: GroupMessage): string {
-  if (message.type === 'user') return '我'
-  if (message.type === 'system') return '系统'
+  if (message.type === 'user') return 'Me'
+  if (message.type === 'system') return 'System'
   if (message.roleName) return message.roleName
-  if (message.roleId) return store.rolesById[message.roleId]?.name ?? 'AI 人员'
-  return 'AI 人员'
+  if (message.roleId) return store.rolesById[message.roleId]?.name ?? 'AI person'
+  return 'AI person'
 }
 
 function modeLabel(mode: RoomMode): string {
-  return mode === 'collaborative' ? '协作群聊' : '独立专家'
+  return mode === 'collaborative' ? 'Collaborative room' : 'Independent experts'
 }
 
 function formatExportDateTime(date: Date): string {
