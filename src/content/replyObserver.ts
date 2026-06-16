@@ -14,6 +14,7 @@ const RESPONSE_DEBOUNCE_MS = 2500
 const RESPONSE_FINAL_SETTLE_MS = 1500
 const REPLY_POLL_INTERVAL_MS = 2000
 const REPLY_TIMEOUT_MS = 120000
+const MAX_GENERATING_WAIT_MS = 300000
 const SHORT_REPLY_MAX_CHARS = 50
 const SHORT_REPLY_STABLE_SETTLE_MS = 5000
 
@@ -39,6 +40,7 @@ export function createReplyObserver(options: {
   let promptBaselineReplies = new Set<string>()
   let replyPollingTimer: number | null = null
   let replyPollingInFlight = false
+  const promptStartedAtByMessage = new Map<string, number>()
   const replyTracker = createReplyTracker()
   const replyTimeout = createReplyTimeout(REPLY_TIMEOUT_MS, messageId => {
     const assignedRole = roleSession.getAssignedRole()
@@ -47,30 +49,38 @@ export function createReplyObserver(options: {
     const replyAttemptId = roleSession.getActiveReplyAttemptId()
     const activePrompt = roleSession.getActivePrompt()
     if (activePrompt?.messageId === messageId && siteAdapter.isGenerating()) {
-      log.warn('reply-timeout:extended-generating', { messageId, roleId: assignedRole?.roleId, roleName: assignedRole?.roleName })
-      options
-        .sendRuntimeMessage({
-          type: 'TEAM_ROLE_STATUS',
-          status: 'generating',
-          ...statusIdentityPayload(),
-        })
-        .catch(error => log.warn('reply-timeout:heartbeat-failed', { messageId, error: error instanceof Error ? error.message : String(error) }))
-      replyTimeout.arm(messageId)
-      return
+      const waitedMs = Date.now() - (promptStartedAtByMessage.get(messageId) ?? Date.now())
+      if (waitedMs >= MAX_GENERATING_WAIT_MS) {
+        log.warn('reply-timeout:max-generating-wait-reached', { messageId, roleId: assignedRole?.roleId, roleName: assignedRole?.roleName, waitedMs })
+        if (tryReportLatestReply(messageId, 'timeout-compensation')) return
+      } else {
+        log.warn('reply-timeout:extended-generating', { messageId, roleId: assignedRole?.roleId, roleName: assignedRole?.roleName })
+        options
+          .sendRuntimeMessage({
+            type: 'TEAM_ROLE_STATUS',
+            status: 'generating',
+            ...statusIdentityPayload(),
+          })
+          .catch(error => log.warn('reply-timeout:heartbeat-failed', { messageId, error: error instanceof Error ? error.message : String(error) }))
+        replyTimeout.arm(messageId)
+        return
+      }
     }
     if (!siteAdapter.isGenerating() && tryReportLatestReply(messageId, 'timeout-compensation')) return
 
     roleSession.clearActivePrompt(messageId)
+    promptStartedAtByMessage.delete(messageId)
     const statusIdentity = statusIdentityPayload()
+    siteAdapter.stopGenerating?.().catch(error => log.warn('reply-timeout:stop-generating-failed', { messageId, error: error instanceof Error ? error.message : String(error) }))
     options
       .sendRuntimeMessage({
         type: 'TEAM_ROLE_STATUS',
         status: 'error',
         ...statusIdentity,
-        error: `等待 ${siteAdapter.id} 回复超时（${Math.round(REPLY_TIMEOUT_MS / 1000)} 秒）`,
+        error: `等待 ${siteAdapter.id} 回复超时（最多 ${Math.round(MAX_GENERATING_WAIT_MS / 1000)} 秒）`,
       })
       .catch(error => log.warn('reply-timeout:status-failed', { error: error instanceof Error ? error.message : String(error) }))
-    options.reportRoleError(messageId, `等待 ${siteAdapter.id} 回复超时（${Math.round(REPLY_TIMEOUT_MS / 1000)} 秒）`, undefined, undefined, replyAttemptId)
+    options.reportRoleError(messageId, `等待 ${siteAdapter.id} 回复超时（最多 ${Math.round(MAX_GENERATING_WAIT_MS / 1000)} 秒）`, undefined, undefined, replyAttemptId)
     clearReplyPolling()
   })
 
@@ -152,6 +162,7 @@ export function createReplyObserver(options: {
 
   function startReplyPolling(messageId: string, replyAttemptId: string | undefined): void {
     clearReplyPolling()
+    promptStartedAtByMessage.set(messageId, Date.now())
     replyTimeout.arm(messageId)
 
     let stableElement: Element | undefined
@@ -201,14 +212,19 @@ export function createReplyObserver(options: {
       }
 
       const stableDuration = timestamp - stableSince
+      const waitedMs = timestamp - (promptStartedAtByMessage.get(messageId) ?? timestamp)
+      const maxGeneratingWaitReached = waitedMs >= MAX_GENERATING_WAIT_MS
       if (stableDuration < RESPONSE_FINAL_SETTLE_MS) {
         schedule()
         return
       }
-      if (generating) {
-        log.debug('reply-poll:defer-generating', { messageId, stableDuration, textLength: candidate.text.length })
+      if (generating && !maxGeneratingWaitReached) {
+        log.debug('reply-poll:defer-generating', { messageId, stableDuration, textLength: candidate.text.length, waitedMs })
         schedule()
         return
+      }
+      if (generating && maxGeneratingWaitReached) {
+        log.warn('reply-poll:accept-after-max-generating-wait', { messageId, stableDuration, textLength: candidate.text.length, waitedMs })
       }
       if (isVeryShortReply(candidate.text) && stableDuration < SHORT_REPLY_STABLE_SETTLE_MS) {
         log.debug('reply-poll:defer-short', {
@@ -253,6 +269,7 @@ export function createReplyObserver(options: {
     if (!assignedRole) return
 
     const replyAttemptId = roleSession.clearActivePrompt(messageId)
+    promptStartedAtByMessage.delete(messageId)
     clearPromptReplyBaseline()
     replyTimeout.clear()
     clearReplyPolling()

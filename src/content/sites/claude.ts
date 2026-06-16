@@ -58,7 +58,7 @@ export function createClaudeAdapter(options: ClaudeAdapterOptions = {}): ChatSit
     const editor = await waitForElement(CLAUDE_SELECTORS.editor, inputTimeoutMs)
 
     setContentEditableText(editor, content)
-    if (readEditorText(editor, { normalizeNbsp: true }) !== content.trim()) {
+    if (!(await waitForClaudeEditorText(editor, content, Math.min(inputTimeoutMs, 2500)))) {
       throw new Error('Claude editor did not accept the prompt text')
     }
 
@@ -83,6 +83,23 @@ export function createClaudeAdapter(options: ClaudeAdapterOptions = {}): ChatSit
     fillAndSend,
     collectPromptDiagnostics,
   }
+}
+
+async function waitForClaudeEditorText(editor: HTMLElement, content: string, timeoutMs: number): Promise<boolean> {
+  const expected = normalizeEditorText(content)
+  const startedAt = Date.now()
+
+  while (Date.now() - startedAt <= timeoutMs) {
+    const actual = normalizeEditorText(readEditorText(editor, { normalizeNbsp: true }))
+    if (actual === expected) return true
+    await new Promise(resolve => window.setTimeout(resolve, 50))
+  }
+
+  return false
+}
+
+function normalizeEditorText(value: string): string {
+  return value.replace(/\u00a0/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 export function getClaudeConversationLocation(href: string): ConversationSnapshot {

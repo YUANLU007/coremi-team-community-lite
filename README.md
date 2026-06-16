@@ -14,6 +14,8 @@
   <a href="./PRIVACY.md">Privacy</a>
   ·
   <a href="./CONTRIBUTING.md">Contributing</a>
+  ·
+  <a href="./docs/newsroom-agent-kit.md">Newsroom Agent Kit</a>
 </p>
 
 # Coremi Team Community Lite
@@ -24,6 +26,13 @@ It helps you create an AI team, assign people to supported AI websites or custom
 
 This repository is intentionally a **Lite** edition. It is designed to build trust, invite community feedback, and provide a useful personal AI workspace without publishing Coremi's private research workflows, paid templates, newsroom operations, or commercial delivery methods.
 
+## New In 1.0.1
+
+- More reliable prompt delivery for Claude's editor.
+- Longer reply observation for slow AI responses, with timeout compensation.
+- A public [Coremi Newsroom Agent Kit](./docs/newsroom-agent-kit.md) for building verifiable editorial agents.
+- A lightweight [video slicing workflow](./docs/video-slicing-workflow.md) for turning field interviews and event footage into short, shareable clips.
+
 ## What Is Included
 
 - Local multi-chat workspace.
@@ -33,6 +42,7 @@ This repository is intentionally a **Lite** edition. It is designed to build tru
 - File and image attachments from the composer, including local text extraction for `.docx`, `.rtf`, text, Markdown, CSV, JSON, and basic text-based PDF parsing.
 - Global notes and per-chat notes.
 - Markdown export.
+- Public workflow documentation for newsroom-style agent discussions.
 - Local Chrome extension storage.
 - Narrow Chrome extension permissions.
 - No beta code, no activation gate, no fixed private extension key.
@@ -40,6 +50,7 @@ This repository is intentionally a **Lite** edition. It is designed to build tru
 ## What Is Not Included
 
 - Coremi AI's private institutional research workflows.
+- Coremi's proprietary ten-agent production prompts, client data, source lists, or paid newsroom operating procedures.
 - Coremi VIP or Coremi Media commercial content systems.
 - Financial, trading, or investment decision templates from Coremi's internal practice.
 - Any hosted Coremi server, analytics, account system, or payment flow.
@@ -101,6 +112,8 @@ Main files:
 - `src/teamPage/`: Coremi Team interface.
 - `public/openteam-frame-rules.json`: iframe header rules for supported AI sites.
 - `dist/`: generated extension package, ignored by Git.
+- `docs/newsroom-agent-kit.md`: public newsroom agent workflow pattern.
+- `docs/video-slicing-workflow.md`: lightweight event/interview video slicing workflow.
 
 Useful commands:
 
@@ -119,6 +132,7 @@ Coremi Team Community Lite is a community tool. The broader Coremi product line 
 - **Coremi Media**: public media and distribution layer.
 - **Coremi VIP**: paid/deep content layer.
 - **Coremi Team Community Lite**: open-source local AI team workspace.
+- **Coremi Newsroom Agent Kit**: public, generic editorial-agent method included in this repository.
 
 ## Coremi Ecosystem
 

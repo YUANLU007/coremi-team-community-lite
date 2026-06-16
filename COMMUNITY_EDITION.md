@@ -10,6 +10,8 @@ This repository may include:
 - Local group-chat workspace.
 - Generic people-library mechanics.
 - Generic, non-regulated role examples.
+- Generic newsroom-agent workflow patterns and artifact contracts.
+- Lightweight public video slicing workflows.
 - Documentation for installation, privacy, permissions, and contribution.
 - Bug fixes for supported AI-site adapters.
 
@@ -18,6 +20,7 @@ This repository may include:
 The following should stay outside this repository:
 
 - Coremi AI institutional research workflows.
+- Coremi's proprietary ten-agent production prompts, private source lists, paid editorial SOP, and client-specific research files.
 - Coremi VIP paid content operations.
 - Coremi Media distribution playbooks.
 - Financial, trading, valuation, investment, or portfolio-decision templates.
