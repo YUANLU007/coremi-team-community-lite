@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.0.2
+
+- Improved Gemini send-button detection after recent Gemini UI changes.
+- Synced the Chrome extension manifest version with the package version.
+
 ## 1.0.1
 
 - Improved Claude prompt insertion reliability for contenteditable editors.

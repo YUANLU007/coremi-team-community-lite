@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Coremi Team Community Lite",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Local-first AI team workspace for multi-model discussion",
   "background": {
     "service_worker": "background.js",

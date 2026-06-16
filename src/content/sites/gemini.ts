@@ -3,8 +3,8 @@ import { keepDeepestResponseContainers } from '../responseContainers'
 import { readResponseTextFromCopyAction, findClickableCopyButton } from './clipboardCopy'
 import { readEditorText, setContentEditableText } from './contentEditable'
 import { extractMarkdownFromDom } from './domMarkdown'
-import { buttonLabelMatches, describeElement, extractCleanTextFromDom, findClosestMatchingAncestor } from './domText'
-import { isClickableButton, waitForClickableButton, waitForElement } from './waitForElement'
+import { describeElement, extractCleanTextFromDom, findClosestMatchingAncestor } from './domText'
+import { isClickableButton, waitForElement } from './waitForElement'
 
 const GEMINI_ORIGIN = 'https://gemini.google.com'
 const GEMINI_HOME_URL = `${GEMINI_ORIGIN}/`
@@ -16,7 +16,19 @@ const DEFAULT_CLIPBOARD_POLL_MS = 40
 const GEMINI_SELECTORS = {
   editor: 'div.ql-editor[contenteditable="true"], rich-textarea div[contenteditable="true"]',
   sendButton:
-    'button.send-button[aria-label*="发送"], button.send-button[aria-label*="Send"], button[aria-label*="Send message"], button[aria-label*="发送消息"]',
+    [
+      'button.send-button',
+      'button[aria-label*="Send"]',
+      'button[aria-label*="send"]',
+      'button[aria-label*="发送"]',
+      'button[aria-label*="提交"]',
+      'button[aria-label*="送出"]',
+      'button[title*="Send"]',
+      'button[title*="发送"]',
+      'button[mattooltip*="Send"]',
+      'button[mattooltip*="发送"]',
+      'button[data-test-id*="send"]',
+    ].join(', '),
   response: 'model-response, .model-response-text, message-content',
   copyButton:
     'button[data-test-id="copy-button"], copy-button button, button[mattooltip="复制回答"], button[aria-label="复制"], button[aria-label*="Copy"], button[aria-label*="复制"]',
@@ -74,7 +86,7 @@ export function createGeminiAdapter(options: GeminiAdapterOptions = {}): ChatSit
 
     if (!autoSend) return
 
-    const sendButton = await waitForClickableButton(GEMINI_SELECTORS.sendButton, inputTimeoutMs, 'Gemini 发送按钮暂不可用，请稍后重试')
+    const sendButton = await waitForGeminiSendButton(inputTimeoutMs)
     sendButton.click()
   }
 
@@ -131,6 +143,7 @@ function collectPromptDiagnostics(): Record<string, unknown> {
     title: document.title,
     editorMatches: [...document.querySelectorAll(GEMINI_SELECTORS.editor)].slice(0, 5).map(describeElement),
     sendButtonMatches: [...document.querySelectorAll(GEMINI_SELECTORS.sendButton)].slice(0, 5).map(describeElement),
+    likelySendButton: findGeminiSendButton() ? describeElement(findGeminiSendButton() as Element) : undefined,
     visibleButtonSamples: [...document.querySelectorAll('button')].slice(0, 12).map(describeElement),
   }
 }
@@ -164,5 +177,69 @@ async function stopGeminiGenerating(): Promise<boolean> {
 }
 
 function findGeminiStopButton(): HTMLButtonElement | undefined {
-  return [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => buttonLabelMatches(button, /stop|stopping|停止|中止/) && isClickableButton(button))
+  return [...document.querySelectorAll<HTMLButtonElement>('button')].find(button => {
+    return isClickableButton(button) && /stop|stopping|停止|中止/.test(getGeminiButtonSearchText(button))
+  })
+}
+
+function waitForGeminiSendButton(timeoutMs: number): Promise<HTMLButtonElement> {
+  const immediate = findGeminiSendButton()
+  if (immediate) return Promise.resolve(immediate)
+
+  return new Promise((resolve, reject) => {
+    const startedAt = Date.now()
+    const timer = window.setInterval(() => {
+      const button = findGeminiSendButton()
+      if (button) {
+        window.clearInterval(timer)
+        resolve(button)
+        return
+      }
+
+      if (Date.now() - startedAt >= timeoutMs) {
+        window.clearInterval(timer)
+        reject(new Error('Gemini 发送按钮暂不可用，请稍后重试'))
+      }
+    }, 250)
+  })
+}
+
+function findGeminiSendButton(): HTMLButtonElement | undefined {
+  const selectorMatches = [...document.querySelectorAll<HTMLButtonElement>(GEMINI_SELECTORS.sendButton)]
+  const directMatch = selectorMatches.find(isGeminiSendButton)
+  if (directMatch) return directMatch
+
+  return [...document.querySelectorAll<HTMLButtonElement>('button')].find(isGeminiSendButton)
+}
+
+function isGeminiSendButton(button: HTMLButtonElement): boolean {
+  if (!isClickableButton(button)) return false
+
+  const label = getGeminiButtonSearchText(button)
+  if (/(stop|stopping|停止|中止|cancel|取消|mic|microphone|voice|语音|attach|upload|上传|附件|menu|more|settings|history)/.test(label)) {
+    return false
+  }
+
+  return /send|submit|发送|提交|送出|arrow_upward/.test(label)
+}
+
+function getGeminiButtonSearchText(button: Element): string {
+  const element = button as HTMLElement
+  const className = typeof element.className === 'string' ? element.className : ''
+  const childLabels = [...button.querySelectorAll('[aria-label], [title], mat-icon, .mat-icon')]
+    .map(child => [child.getAttribute('aria-label'), child.getAttribute('title'), child.textContent].filter(Boolean).join(' '))
+    .join(' ')
+
+  return [
+    button.getAttribute('aria-label'),
+    button.getAttribute('title'),
+    button.getAttribute('mattooltip'),
+    button.getAttribute('data-test-id'),
+    className,
+    button.textContent,
+    childLabels,
+  ]
+    .filter(Boolean)
+    .join(' ')
+    .toLowerCase()
 }
