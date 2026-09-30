@@ -26,9 +26,10 @@ Coremi Team Community Lite 是 Coremi Team 的开源社区轻量版。它是一�
 
 这个仓库刻意做成 **Lite** 版本：它用于建立信任、吸收反馈、方便个人使用，但不公开 Coremi 的私有研究工作流、付费模板、新闻编辑室 SOP 或商业交付方法。
 
-## 1.0.1 更新
+## 1.0.13 更新
 
-- 提升 Claude 编辑器里提示词写入的稳定性。
+- 正式加入 Kimi，可作为群聊中的独立 AI 人员。
+- 适配 Claude 当前输入框及嵌套 Shadow DOM，提升提示词写入稳定性。
 - 延长慢回复模型的观察窗口，并加入超时补偿。
 - 新增公开版 [Coremi Newsroom Agent Kit](./docs/newsroom-agent-kit.md)，用于搭建可验证的新闻编辑部智能体。
 - 新增轻量 [视频切片工作流](./docs/video-slicing-workflow.md)，用于把活动现场、采访和长视频拆成可传播短片。
@@ -37,7 +38,7 @@ Coremi Team Community Lite 是 Coremi Team 的开源社区轻量版。它是一�
 
 - 本地多群聊工作台。
 - 人员库和自定义 AI 成员。
-- 支持 ChatGPT、Claude、Gemini、DeepSeek 和自定义 GPT 链接。
+- 支持 ChatGPT、Claude、Gemini、DeepSeek、Kimi 和自定义 GPT 链接。
 - 同一任务发送给多个 AI 成员，并在一个房间里汇总回复。
 - 支持从输入框添加文件和图片；`.docx`、`.rtf`、文本、Markdown、CSV、JSON，以及基础文本型 PDF 会在本地抽取文字后进入智能体上下文。
 - 全局笔记和群聊笔记。
@@ -62,6 +63,7 @@ Coremi Team Community Lite 是 Coremi Team 的开源社区轻量版。它是一�
 - Claude: <https://claude.ai/>
 - Gemini: <https://gemini.google.com/>
 - DeepSeek: <https://chat.deepseek.com/>
+- Kimi: <https://www.kimi.com/>
 
 这些网站经常调整前端页面。如果某个适配失效，欢迎提交 issue，并说明站点、浏览器版本和复现步骤。
 

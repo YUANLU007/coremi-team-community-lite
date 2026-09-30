@@ -145,7 +145,7 @@
           <div id="reference-draft" class="reference-draft" hidden></div>
           <div id="mention-panel" class="mention-panel" hidden></div>
           <div id="attachment-preview" class="attachment-preview" hidden></div>
-          <textarea id="message-input" placeholder="Type a message. Use @member to request a reply; without @, it is saved to the room only."></textarea>
+          <textarea id="message-input" placeholder="输入消息，@成员可指定回复；不 @ 仅记录到群聊。"></textarea>
           <div class="composer-actions">
             <button id="attachment-button" class="composer-icon-btn" type="button" aria-label="Add files or images" title="Add files or images">＋</button>
             <input id="attachment-input" type="file" multiple hidden />
@@ -396,6 +396,10 @@
               <label class="site-segment" for="template-site-deepseek">
                 <input id="template-site-deepseek" type="radio" name="template-chat-site" value="deepseek" checked />
                 <span>DeepSeek</span>
+              </label>
+              <label class="site-segment" for="template-site-kimi">
+                <input id="template-site-kimi" type="radio" name="template-chat-site" value="kimi" />
+                <span>Kimi</span>
               </label>
               <label class="site-segment" for="template-site-external">
                 <input id="template-site-external" type="radio" name="template-chat-site" value="external" />

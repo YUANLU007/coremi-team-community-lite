@@ -26,9 +26,10 @@ It helps you create an AI team, assign people to supported AI websites or custom
 
 This repository is intentionally a **Lite** edition. It is designed to build trust, invite community feedback, and provide a useful personal AI workspace without publishing Coremi's private research workflows, paid templates, newsroom operations, or commercial delivery methods.
 
-## New In 1.0.1
+## New In 1.0.13
 
-- More reliable prompt delivery for Claude's editor.
+- Added Kimi as a first-class AI team member site.
+- More reliable prompt delivery for Claude's current editor, including nested Shadow DOM composers.
 - Longer reply observation for slow AI responses, with timeout compensation.
 - A public [Coremi Newsroom Agent Kit](./docs/newsroom-agent-kit.md) for building verifiable editorial agents.
 - A lightweight [video slicing workflow](./docs/video-slicing-workflow.md) for turning field interviews and event footage into short, shareable clips.
@@ -37,7 +38,7 @@ This repository is intentionally a **Lite** edition. It is designed to build tru
 
 - Local multi-chat workspace.
 - People library and custom AI people.
-- Website-based roles for ChatGPT, Claude, Gemini, DeepSeek, and custom GPT links.
+- Website-based roles for ChatGPT, Claude, Gemini, DeepSeek, Kimi, and custom GPT links.
 - Shared prompt composer and multi-role reply collection.
 - File and image attachments from the composer, including local text extraction for `.docx`, `.rtf`, text, Markdown, CSV, JSON, and basic text-based PDF parsing.
 - Global notes and per-chat notes.
@@ -62,6 +63,7 @@ This repository is intentionally a **Lite** edition. It is designed to build tru
 - Claude: <https://claude.ai/>
 - Gemini: <https://gemini.google.com/>
 - DeepSeek: <https://chat.deepseek.com/>
+- Kimi: <https://www.kimi.com/>
 
 These sites change their web UI often. If one adapter stops working, please open an issue with the site name, browser version, and a short description of what failed.
 

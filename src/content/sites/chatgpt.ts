@@ -1,18 +1,19 @@
 import type { ChatSiteAdapter, ConversationSnapshot } from './types'
 import { keepDeepestResponseContainers } from '../responseContainers'
 import { readResponseTextFromCopyAction } from './clipboardCopy'
-import { readEditorText, setContentEditableText } from './contentEditable'
+import { ensureContentEditableText } from './contentEditable'
 import { extractMarkdownFromDom } from './domMarkdown'
 import { buttonLabelMatches, describeElement, extractCleanTextFromDom, findClosestMatchingAncestor } from './domText'
 import { isClickableButton, waitForClickableButton, waitForElement } from './waitForElement'
 
 const CHATGPT_HOSTS = new Set(['chatgpt.com', 'chat.openai.com'])
-const DEFAULT_INPUT_TIMEOUT_MS = 9000
+const DEFAULT_INPUT_TIMEOUT_MS = 18000
 const DEFAULT_CLIPBOARD_TIMEOUT_MS = 900
 const DEFAULT_CLIPBOARD_POLL_MS = 40
 
 const CHATGPT_SELECTORS = {
-  editor: 'form[data-type="unified-composer"] #prompt-textarea[contenteditable="true"], #prompt-textarea.ProseMirror[contenteditable="true"]',
+  editor:
+    'form[data-type="unified-composer"] #prompt-textarea[contenteditable="true"], #prompt-textarea.ProseMirror[contenteditable="true"], div.ProseMirror#prompt-textarea[contenteditable="true"], [data-testid="prompt-textarea"][contenteditable="true"]',
   sendButton:
     'button[data-testid="send-button"], button[aria-label*="发送"], button[aria-label*="Send"], button[aria-label*="提交"], button[aria-label*="Submit"]',
   response: '[data-message-author-role="assistant"]',
@@ -66,13 +67,13 @@ export function createChatGptAdapter(options: ChatGptAdapterOptions = {}): ChatS
   async function fillAndSend(content: string, autoSend = true): Promise<void> {
     const editor = await waitForElement(CHATGPT_SELECTORS.editor, inputTimeoutMs)
 
-    setContentEditableText(editor, content)
-    if (readEditorText(editor) !== content.trim()) {
+    if (!(await ensureContentEditableText(editor, content))) {
       throw new Error('ChatGPT editor did not accept the prompt text')
     }
 
     if (!autoSend) return
 
+    await waitForPromptUiToSettle()
     const sendButton = await waitForClickableButton(CHATGPT_SELECTORS.sendButton, inputTimeoutMs, 'ChatGPT 发送按钮暂不可用，请稍后重试')
     sendButton.click()
   }
@@ -219,6 +220,10 @@ function isVisibleInteractiveElement(element: Element): boolean {
   const style = window.getComputedStyle(element)
   if (style.pointerEvents === 'none') return false
   return isVisibleElement(element)
+}
+
+function waitForPromptUiToSettle(): Promise<void> {
+  return new Promise(resolve => window.setTimeout(resolve, 150))
 }
 
 function isVisibleOrDocumentedIndicator(element: Element): boolean {

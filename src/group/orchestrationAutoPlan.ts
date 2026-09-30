@@ -68,7 +68,7 @@ export function buildAutoOrchestrationPrompt(input: AutoOrchestrationPromptInput
     '1. 如果 existingRoles 非空，优先复用 existingRoles，复用时 roles[].reuseRoleId 必须填 existingRoles 里的 id。',
     '2. 只有现有人员无法覆盖必要职责时，才创建新人员。',
     '3. 如果 existingRoles 为空，必须创建 2-5 个新人员。',
-    '4. 每个 roles[].preferredSite 必须使用 "chatgpt"、"gemini"、"claude" 或 "deepseek"；如果用户明确要求 ChatGPT、Gemini、Claude 或 DeepSeek 站点，相关人员必须使用对应站点。',
+    '4. 每个 roles[].preferredSite 必须使用 "chatgpt"、"gemini"、"claude"、"deepseek" 或 "kimi"；如果用户明确要求 ChatGPT、Gemini、Claude、DeepSeek 或 Kimi 站点，相关人员必须使用对应站点。',
     '5. 不要创建 kind=parallel 的节点；并行通过一个节点连接多个后继节点表达。',
     '6. 多个上游节点连接到同一个节点表示汇合，该节点要等所有上游完成。',
     '7. 同一个 roleKey 不能出现在同一批可并行执行的节点中；同一人员要做多件事时必须串行。',
@@ -87,6 +87,7 @@ export function buildAutoOrchestrationPrompt(input: AutoOrchestrationPromptInput
       { value: 'gemini', label: 'Gemini' },
       { value: 'claude', label: 'Claude' },
       { value: 'deepseek', label: 'DeepSeek' },
+      { value: 'kimi', label: 'Kimi' },
     ], null, 2),
     `默认站点：${input.store.settings.defaultChatSite}`,
     '',
@@ -406,6 +407,7 @@ function readChatSite(value: unknown): ChatSite | undefined {
   if (normalized.includes('claude') || normalized === 'anthropic') return 'claude'
   if (normalized.includes('gemini') || normalized === 'google') return 'gemini'
   if (normalized.includes('deepseek')) return 'deepseek'
+  if (normalized.includes('kimi') || normalized.includes('moonshot')) return 'kimi'
   return undefined
 }
 

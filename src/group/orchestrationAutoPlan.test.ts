@@ -118,11 +118,12 @@ describe('orchestration auto plan', () => {
     const prompt = buildAutoOrchestrationPrompt({ task: '做一个方案', existingRoles: [role], store })
 
     expect(prompt).toContain('优先复用 existingRoles')
-    expect(prompt).toContain('preferredSite 必须使用 "chatgpt"、"gemini"、"claude" 或 "deepseek"')
+    expect(prompt).toContain('preferredSite 必须使用 "chatgpt"、"gemini"、"claude"、"deepseek" 或 "kimi"')
     expect(prompt).toContain('ChatGPT')
     expect(prompt).toContain('Gemini')
     expect(prompt).toContain('Claude')
     expect(prompt).toContain('DeepSeek')
+    expect(prompt).toContain('Kimi')
     expect(prompt).toContain('不要创建 kind=parallel')
     expect(prompt).toContain('"id": "role-1"')
   })

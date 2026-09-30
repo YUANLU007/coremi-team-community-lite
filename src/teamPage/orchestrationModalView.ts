@@ -1206,11 +1206,12 @@ function siteLabel(site: ChatSite): string {
   if (site === 'chatgpt') return 'ChatGPT'
   if (site === 'claude') return 'Claude'
   if (site === 'deepseek') return 'DeepSeek'
+  if (site === 'kimi') return 'Kimi'
   return 'Gemini'
 }
 
 function editableChatSites(): ChatSite[] {
-  return ['deepseek', 'chatgpt', 'gemini', 'claude']
+  return ['deepseek', 'chatgpt', 'gemini', 'claude', 'kimi']
 }
 
 function externalModelLabel(model: ExternalModelConfig | undefined): string {
@@ -1218,7 +1219,7 @@ function externalModelLabel(model: ExternalModelConfig | undefined): string {
 }
 
 function visibleChatSite(site: ChatSite): ChatSite {
-  return ['gemini', 'chatgpt', 'claude', 'deepseek'].includes(site) ? site : 'gemini'
+  return ['gemini', 'chatgpt', 'claude', 'deepseek', 'kimi'].includes(site) ? site : 'gemini'
 }
 
 function newId(prefix: string): string {

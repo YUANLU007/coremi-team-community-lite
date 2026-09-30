@@ -670,7 +670,7 @@ function normalizeSettings(raw: unknown, storedVersion = CURRENT_STORE_VERSION):
 }
 
 function readSettingsChatSite(raw: unknown): OpenTeamSettings['defaultChatSite'] {
-  return raw === 'gemini' || raw === 'chatgpt' || raw === 'claude' || raw === 'deepseek' ? raw : DEFAULT_SETTINGS.defaultChatSite
+  return raw === 'gemini' || raw === 'chatgpt' || raw === 'claude' || raw === 'deepseek' || raw === 'kimi' ? raw : DEFAULT_SETTINGS.defaultChatSite
 }
 
 function normalizeExternalModelRecord(raw: unknown): Record<string, ExternalModelConfig> {

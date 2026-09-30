@@ -22,6 +22,21 @@ export interface ParseGroupMentionsOptions extends RoleMentionLabelOptions {
   defaultTarget?: 'all' | 'none'
 }
 
+const ALL_MENTION_LABELS = [
+  'all',
+  'All',
+  'ALL',
+  'everyone',
+  'Everyone',
+  'EVERYONE',
+  '所有人',
+  '全员',
+  '全体',
+  '大家',
+  '每个人',
+  '所有成员',
+]
+
 export function parseGroupMentions(raw: string, roles: GroupRole[], options: ParseGroupMentionsOptions = {}): ParsedGroupMention {
   const trimmed = raw.trim()
   if (!trimmed) return { ok: false, error: 'Message cannot be empty' }
@@ -47,7 +62,7 @@ export function parseGroupMentions(raw: string, roles: GroupRole[], options: Par
       continue
     }
 
-    const allMentionLabel = ['all', 'everyone', 'Everyone', '所有人'].find(label => mentionMatches(trimmed, index, label))
+    const allMentionLabel = ALL_MENTION_LABELS.find(label => mentionMatches(trimmed, index, label))
     if (allMentionLabel) {
       targetsAll = true
       index += allMentionLabel.length + 1
@@ -100,6 +115,7 @@ function siteLabel(site: GroupRole['chatSite']): string {
   if (site === 'chatgpt') return 'ChatGPT'
   if (site === 'claude') return 'Claude'
   if (site === 'deepseek') return 'DeepSeek'
+  if (site === 'kimi') return 'Kimi'
   return 'Gemini'
 }
 

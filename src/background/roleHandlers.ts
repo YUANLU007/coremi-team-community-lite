@@ -337,7 +337,7 @@ function getRawBatchSource(items: unknown[]): 'library' | 'temporary' | 'mixed' 
 }
 
 function readChatSite(value: unknown): ChatSite | undefined {
-  return value === 'chatgpt' || value === 'claude' || value === 'gemini' || value === 'deepseek' ? value : undefined
+  return value === 'chatgpt' || value === 'claude' || value === 'gemini' || value === 'deepseek' || value === 'kimi' ? value : undefined
 }
 
 function readModelSource(value: unknown): 'site' | 'external' | undefined {

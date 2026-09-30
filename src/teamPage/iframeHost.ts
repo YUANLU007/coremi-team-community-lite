@@ -455,10 +455,18 @@ export class IframeHost {
   private assignRole(record: RoleFrameRecord): void {
     if (!this.enabled) return
     if (this.framesByRoleKey.get(roleKey(record.chatId, record.roleId)) !== record) return
+    if (record.assignmentAttempts >= 24) {
+      this.stopAssignLoop(record)
+      return
+    }
+
     record.assignmentAttempts += 1
     record.lastAssignedAt = Date.now()
+    const targetWindow = record.iframe.contentWindow
+    if (!targetWindow) return
+
     try {
-      record.iframe.contentWindow?.postMessage({
+      targetWindow.postMessage({
         type: FRAME_ASSIGN_MESSAGE,
         chatId: record.chatId,
         roleId: record.roleId,
@@ -547,6 +555,7 @@ function siteLabel(site: ChatSite | undefined): string {
   if (site === 'chatgpt') return 'ChatGPT'
   if (site === 'claude') return 'Claude'
   if (site === 'deepseek') return 'DeepSeek'
+  if (site === 'kimi') return 'Kimi'
   return 'Gemini'
 }
 

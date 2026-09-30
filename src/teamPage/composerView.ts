@@ -70,45 +70,45 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     const thinking = getVisibleThinkingRoles(roles)
 
     if (!chat) {
-      deps.targetPreviewEl.textContent = 'Select a chat to send'
+      deps.targetPreviewEl.textContent = '请选择一个群聊'
       deps.sendButtonEl.disabled = true
     } else if (roles.length === 0) {
-      deps.targetPreviewEl.textContent = 'This chat has no people yet'
+      deps.targetPreviewEl.textContent = '这个群聊还没有成员'
       deps.sendButtonEl.disabled = true
     } else if (!raw && deps.state.pendingAttachments.length === 0) {
-      deps.targetPreviewEl.textContent = 'Type a message or add attachments; without @ it is only saved, @ people to request replies'
+      deps.targetPreviewEl.textContent = '输入消息或添加附件；不 @ 仅记录到群聊，@ 人员可触发回复'
       deps.sendButtonEl.disabled = true
     } else if (!parsed.ok) {
       deps.targetPreviewEl.textContent = parsed.error
       deps.sendButtonEl.disabled = true
     } else if (targets.length === 0) {
-      deps.targetPreviewEl.textContent = 'Saved as a room note; @ people to trigger AI replies'
+      deps.targetPreviewEl.textContent = '将作为群消息记录，不触发 AI；@ 人员可触发回复'
       deps.sendButtonEl.disabled = false
     } else if (reconnecting.length > 0) {
       const readyTargets = targets.filter(role => !reconnecting.includes(role) && role.status === 'ready')
       deps.targetPreviewEl.textContent = readyTargets.length > 0
-        ? `Will send to: ${readyTargets.map(roleDisplayName).join(', ')}; reconnecting: ${reconnecting.map(roleDisplayName).join(', ')}`
-        : `Auto-reconnecting: ${reconnecting.map(roleDisplayName).join(', ')}`
+        ? `将发送给：${readyTargets.map(roleDisplayName).join('、')}；正在重连：${reconnecting.map(roleDisplayName).join('、')}`
+        : `正在自动重连：${reconnecting.map(roleDisplayName).join('、')}`
       deps.sendButtonEl.disabled = readyTargets.length === 0
     } else if (unavailable.length > 0) {
       const waiting = unavailable.filter(role => !shouldAutoReconnectRole(role))
       const readyTargets = targets.filter(role => role.status === 'ready')
       if (waiting.length > 0 && readyTargets.length === 0) {
-        deps.targetPreviewEl.textContent = `Please wait: ${waiting.map(roleDisplayName).join(', ')} is replying`
+        deps.targetPreviewEl.textContent = `请稍等：${waiting.map(roleDisplayName).join('、')} 正在回复`
         deps.sendButtonEl.disabled = true
       } else if (waiting.length > 0) {
-        deps.targetPreviewEl.textContent = `Will send to: ${readyTargets.map(roleDisplayName).join(', ')}; skipping replying people: ${waiting.map(roleDisplayName).join(', ')}`
+        deps.targetPreviewEl.textContent = `将发送给：${readyTargets.map(roleDisplayName).join('、')}；跳过正在回复的成员：${waiting.map(roleDisplayName).join('、')}`
         deps.sendButtonEl.disabled = false
       } else {
-        deps.targetPreviewEl.textContent = `Will reconnect first: ${unavailable.map(roleDisplayName).join(', ')}`
+        deps.targetPreviewEl.textContent = `将先重连：${unavailable.map(roleDisplayName).join('、')}`
         deps.sendButtonEl.disabled = false
       }
     } else {
-      deps.targetPreviewEl.textContent = `Will send to: ${targets.map(roleDisplayName).join(', ')}`
+      deps.targetPreviewEl.textContent = `将发送给：${targets.map(roleDisplayName).join('、')}`
       deps.sendButtonEl.disabled = false
     }
 
-    deps.busyPreviewEl.textContent = thinking.length > 0 ? `Replying: ${thinking.map(roleDisplayName).join(', ')}` : ''
+    deps.busyPreviewEl.textContent = thinking.length > 0 ? `正在回复：${thinking.map(roleDisplayName).join('、')}` : ''
   }
 
   function renderAttachmentPreview(): void {
@@ -193,9 +193,9 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
       site.className = 'mention-site-badge'
       if (mentionOption.type === 'all') {
         avatar.className = 'mention-avatar mention-avatar-all'
-        avatar.textContent = 'A'
-        name.textContent = 'Everyone'
-        site.textContent = 'All'
+        avatar.textContent = '全'
+        name.textContent = '所有人'
+        site.textContent = '全员'
         option.addEventListener('click', () => insertAllMention())
       } else {
         const role = mentionOption.role
@@ -278,7 +278,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
     const waitingRoles = targetResult.roles.filter(role => role.status === 'thinking' && !shouldAutoReconnectRole(role))
     const readyRoles = targetResult.roles.filter(role => role.status === 'ready')
     if (waitingRoles.length > 0 && readyRoles.length === 0) {
-      deps.showError(`Please wait for replies to finish: ${waitingRoles.map(roleDisplayName).join(', ')}`)
+      deps.showError(`请等待这些成员回复完成：${waitingRoles.map(roleDisplayName).join('、')}`)
       return
     }
 
@@ -368,7 +368,7 @@ export function createComposerView(deps: ComposerViewDependencies): ComposerView
   }
 
   function insertAllMention(): void {
-    insertMentionLabel('Everyone')
+    insertMentionLabel('所有人')
   }
 
   function insertMentionLabel(label: string): void {

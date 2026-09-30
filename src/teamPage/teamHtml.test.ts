@@ -14,8 +14,8 @@ function readTeamDocument(): string {
   return `${readTeamHtml()}\n${readTeamCss()}`
 }
 
-const REMOVED_SITE_IDS = ['ki' + 'mi', 'q' + 'wen']
-const removedSiteLabel = (siteId: string): string => siteId === REMOVED_SITE_IDS[0] ? 'K' + 'imi' : '千' + '问'
+const REMOVED_SITE_IDS = ['q' + 'wen']
+const removedSiteLabel = (_siteId?: string): string => '千' + '问'
 
 describe('team.html chat creation UI', () => {
   it('starts directly without a local invite-code activation gate', () => {
@@ -168,6 +168,7 @@ describe('team.html chat creation UI', () => {
     expect(html).toContain('id="template-site-chatgpt"')
     expect(html).toContain('id="template-site-claude"')
     expect(html).toContain('id="template-site-deepseek"')
+    expect(html).toContain('id="template-site-kimi"')
     expect(html).not.toMatch(/id="template-site-gemini"[^>]*checked/)
     expect(html).toMatch(/id="template-site-deepseek"[^>]*checked/)
     for (const site of REMOVED_SITE_IDS) {
@@ -378,9 +379,9 @@ describe('team.html chat creation UI', () => {
     expect(source).toContain("source: 'temporary'")
     expect(source).toContain("if (deps.templateSiteClaudeEl.checked) return 'claude'")
     expect(source).toContain("if (deps.templateSiteDeepSeekEl.checked) return 'deepseek'")
-    expect(source).toContain("const VISIBLE_CHAT_SITES = ['gemini', 'chatgpt', 'claude', 'deepseek'] as const")
+    expect(source).toContain("if (deps.templateSiteKimiEl.checked) return 'kimi'")
+    expect(source).toContain("const VISIBLE_CHAT_SITES = ['gemini', 'chatgpt', 'claude', 'deepseek', 'kimi'] as const")
     for (const site of REMOVED_SITE_IDS) expect(source).not.toContain(`return '${site}'`)
-    expect(source).not.toContain('templateSite' + 'K' + 'imiEl')
     expect(source).not.toContain('templateSite' + 'Q' + 'wenEl')
   })
 
@@ -466,7 +467,7 @@ describe('team.html chat creation UI', () => {
   it('normalizes light theme site pills so model badges do not leak dark brand colors', () => {
     const html = readTeamDocument()
 
-    for (const siteClass of ['gemini', 'chatgpt', 'claude', 'deepseek', 'external']) {
+    for (const siteClass of ['gemini', 'chatgpt', 'claude', 'deepseek', 'kimi', 'external']) {
       expect(html).toMatch(new RegExp(`:root\\[data-theme="light"\\] \\.site-pill-${siteClass}\\s*{[^}]*background:\\s*#f6f7f8;[^}]*color:\\s*#4b5563;`, 's'))
     }
     expect(html).toMatch(/:root\[data-theme="light"\] #iframe-host \.role-frame-site\s*{[^}]*background:\s*#f6f7f8;[^}]*color:\s*#4b5563;/s)
@@ -481,7 +482,7 @@ describe('team.html chat creation UI', () => {
     expect(html).not.toContain('为这次加入群聊的人员统一指定 Gemini。')
     expect(html).not.toContain('为这次加入群聊的人员统一指定 ChatGPT。')
     expect(html).not.toContain('为这次加入群聊的人员统一指定 Claude。')
-    expect(html).not.toContain(`为这次加入群聊的人员统一指定${removedSiteLabel(REMOVED_SITE_IDS[1])}。`)
+    expect(html).not.toContain(`为这次加入群聊的人员统一指定${removedSiteLabel()}。`)
   })
 
   it('adds search and built-in/custom tabs to the add-person dialog', () => {

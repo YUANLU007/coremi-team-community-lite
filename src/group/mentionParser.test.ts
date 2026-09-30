@@ -12,7 +12,7 @@ describe('parseGroupMentions', () => {
     })
   })
 
-  it('targets all roles for @all and @所有人 without marking explicit role mentions', () => {
+  it('targets all roles for @all, @Everyone, and Chinese aliases without marking explicit role mentions', () => {
     expect(parseGroupMentions('@all 请一起看', roles, { defaultTarget: 'none' })).toEqual({
       ok: true,
       content: '请一起看',
@@ -20,7 +20,21 @@ describe('parseGroupMentions', () => {
       mentionedRoleIds: [],
       mentionsAll: true,
     })
+    expect(parseGroupMentions('@Everyone 请一起看', roles, { defaultTarget: 'none' })).toEqual({
+      ok: true,
+      content: '请一起看',
+      targetRoleIds: ['role-eng', 'role-pm'],
+      mentionedRoleIds: [],
+      mentionsAll: true,
+    })
     expect(parseGroupMentions('@所有人 请一起看', roles, { defaultTarget: 'none' })).toEqual({
+      ok: true,
+      content: '请一起看',
+      targetRoleIds: ['role-eng', 'role-pm'],
+      mentionedRoleIds: [],
+      mentionsAll: true,
+    })
+    expect(parseGroupMentions('@全员 请一起看', roles, { defaultTarget: 'none' })).toEqual({
       ok: true,
       content: '请一起看',
       targetRoleIds: ['role-eng', 'role-pm'],

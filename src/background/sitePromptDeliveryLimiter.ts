@@ -1,7 +1,11 @@
 import type { ChatSite } from '../group/types'
 
 const DEFAULT_MAX_ACTIVE_BY_SITE: Partial<Record<ChatSite, number>> = {
-  deepseek: 2,
+  gemini: 1,
+  claude: 1,
+  chatgpt: 2,
+  deepseek: 1,
+  kimi: 1,
 }
 
 export interface LimitedPromptDelivery {

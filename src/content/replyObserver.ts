@@ -13,8 +13,8 @@ type ReplySource = 'observer' | 'timeout-compensation' | 'polling-compensation'
 const RESPONSE_DEBOUNCE_MS = 2500
 const RESPONSE_FINAL_SETTLE_MS = 1500
 const REPLY_POLL_INTERVAL_MS = 2000
-const REPLY_TIMEOUT_MS = 120000
-const MAX_GENERATING_WAIT_MS = 300000
+const REPLY_TIMEOUT_MS = 180000
+const MAX_GENERATING_WAIT_MS = 600000
 const SHORT_REPLY_MAX_CHARS = 50
 const SHORT_REPLY_STABLE_SETTLE_MS = 5000
 

@@ -136,6 +136,7 @@ export interface TeamPageDomRefs {
   templateSiteChatGptEl: HTMLInputElement
   templateSiteClaudeEl: HTMLInputElement
   templateSiteDeepSeekEl: HTMLInputElement
+  templateSiteKimiEl: HTMLInputElement
   templateSiteExternalEl: HTMLInputElement
   templateExternalModelFieldEl: HTMLElement
   templateExternalModelSelectEl: HTMLSelectElement
@@ -296,6 +297,7 @@ export function createTeamPageDomRefs(): TeamPageDomRefs {
     templateSiteChatGptEl: requireElement<HTMLInputElement>('#template-site-chatgpt'),
     templateSiteClaudeEl: requireElement<HTMLInputElement>('#template-site-claude'),
     templateSiteDeepSeekEl: requireElement<HTMLInputElement>('#template-site-deepseek'),
+    templateSiteKimiEl: requireElement<HTMLInputElement>('#template-site-kimi'),
     templateSiteExternalEl: requireElement<HTMLInputElement>('#template-site-external'),
     templateExternalModelFieldEl: requireElement<HTMLElement>('#template-external-model-field'),
     templateExternalModelSelectEl: requireElement<HTMLSelectElement>('#template-external-model-select'),

@@ -1,7 +1,7 @@
 import type { ChatSiteAdapter, ConversationSnapshot } from './types'
 import { keepDeepestResponseContainers } from '../responseContainers'
 import { readResponseTextFromCopyAction, findClickableCopyButton } from './clipboardCopy'
-import { readEditorText, setContentEditableText } from './contentEditable'
+import { ensureContentEditableText } from './contentEditable'
 import { extractMarkdownFromDom } from './domMarkdown'
 import { describeElement, extractCleanTextFromDom, findClosestMatchingAncestor } from './domText'
 import { isClickableButton, waitForElement } from './waitForElement'
@@ -9,24 +9,34 @@ import { isClickableButton, waitForElement } from './waitForElement'
 const GEMINI_ORIGIN = 'https://gemini.google.com'
 const GEMINI_HOME_URL = `${GEMINI_ORIGIN}/`
 const GEMINI_APP_PREFIX = '/app/'
-const DEFAULT_INPUT_TIMEOUT_MS = 9000
+const DEFAULT_INPUT_TIMEOUT_MS = 18000
 const DEFAULT_CLIPBOARD_TIMEOUT_MS = 900
 const DEFAULT_CLIPBOARD_POLL_MS = 40
 
 const GEMINI_SELECTORS = {
-  editor: 'div.ql-editor[contenteditable="true"], rich-textarea div[contenteditable="true"]',
+  editor:
+    'div.ql-editor[contenteditable="true"], rich-textarea div[contenteditable="true"], div[contenteditable="true"][role="textbox"], div[contenteditable="true"][aria-label*="Message"], textarea',
   sendButton:
     [
       'button.send-button',
+      'button[data-testid="send-button"]',
+      'button[data-test-id="send-button"]',
       'button[aria-label*="Send"]',
       'button[aria-label*="send"]',
+      'button[aria-label*="Submit"]',
       'button[aria-label*="发送"]',
       'button[aria-label*="提交"]',
       'button[aria-label*="送出"]',
+      'button[aria-label*="送信"]',
+      '[role="button"][aria-label*="Send"]',
+      '[role="button"][aria-label*="发送"]',
+      '[role="button"][aria-label*="提交"]',
       'button[title*="Send"]',
       'button[title*="发送"]',
       'button[mattooltip*="Send"]',
+      'button[mattooltip*="Submit"]',
       'button[mattooltip*="发送"]',
+      'button[mattooltip*="提交"]',
       'button[data-test-id*="send"]',
     ].join(', '),
   response: 'model-response, .model-response-text, message-content',
@@ -79,13 +89,13 @@ export function createGeminiAdapter(options: GeminiAdapterOptions = {}): ChatSit
   async function fillAndSend(content: string, autoSend = true): Promise<void> {
     const editor = await waitForElement(GEMINI_SELECTORS.editor, inputTimeoutMs)
 
-    setContentEditableText(editor, content)
-    if (readEditorText(editor) !== content.trim()) {
+    if (!(await ensureContentEditableText(editor, content))) {
       throw new Error('Gemini editor did not accept the prompt text')
     }
 
     if (!autoSend) return
 
+    await waitForPromptUiToSettle()
     const sendButton = await waitForGeminiSendButton(inputTimeoutMs)
     sendButton.click()
   }
@@ -220,13 +230,13 @@ function isGeminiSendButton(button: HTMLButtonElement): boolean {
     return false
   }
 
-  return /send|submit|发送|提交|送出|arrow_upward/.test(label)
+  return /send|submit|发送|提交|送出|送信|arrow_upward|paper_plane|send_/.test(label)
 }
 
 function getGeminiButtonSearchText(button: Element): string {
   const element = button as HTMLElement
   const className = typeof element.className === 'string' ? element.className : ''
-  const childLabels = [...button.querySelectorAll('[aria-label], [title], mat-icon, .mat-icon')]
+  const childLabels = [...button.querySelectorAll('[aria-label], [title], [data-testid], [data-test-id], mat-icon, .mat-icon')]
     .map(child => [child.getAttribute('aria-label'), child.getAttribute('title'), child.textContent].filter(Boolean).join(' '))
     .join(' ')
 
@@ -234,6 +244,7 @@ function getGeminiButtonSearchText(button: Element): string {
     button.getAttribute('aria-label'),
     button.getAttribute('title'),
     button.getAttribute('mattooltip'),
+    button.getAttribute('data-testid'),
     button.getAttribute('data-test-id'),
     className,
     button.textContent,
@@ -242,4 +253,8 @@ function getGeminiButtonSearchText(button: Element): string {
     .filter(Boolean)
     .join(' ')
     .toLowerCase()
+}
+
+function waitForPromptUiToSettle(): Promise<void> {
+  return new Promise(resolve => window.setTimeout(resolve, 150))
 }

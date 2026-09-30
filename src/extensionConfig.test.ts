@@ -27,11 +27,16 @@ describe('extension security configuration', () => {
     expect(manifest.host_permissions).toEqual([
       'https://gemini.google.com/*',
       'https://*.gemini.google.com/*',
+      'https://google.com/*',
+      'https://www.google.com/*',
+      'https://*.google.com/*',
       'https://chatgpt.com/*',
       'https://*.chatgpt.com/*',
       'https://chat.openai.com/*',
       'https://claude.ai/*',
       'https://chat.deepseek.com/*',
+      'https://www.kimi.com/*',
+      'https://kimi.com/*',
     ])
     expect(manifest.host_permissions).not.toContain('<all_urls>')
     expect(manifest.host_permissions).not.toContain('https://*/*')
@@ -60,13 +65,15 @@ describe('extension security configuration', () => {
       }
     }>
 
-    expect(rules).toHaveLength(5)
+    expect(rules).toHaveLength(7)
     expect(rules.map(rule => rule.condition?.urlFilter)).toEqual([
       '||gemini.google.com/',
       '||chatgpt.com/',
       '||chat.openai.com/',
       '||claude.ai/',
       '||chat.deepseek.com/',
+      '||google.com/',
+      '||kimi.com/',
     ])
 
     for (const rule of rules) {

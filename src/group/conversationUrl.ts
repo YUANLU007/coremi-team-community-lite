@@ -10,6 +10,9 @@ const CLAUDE_ORIGIN = 'https://claude.ai'
 const CLAUDE_HOME_URL = 'https://claude.ai/new'
 const DEEPSEEK_ORIGIN = 'https://chat.deepseek.com'
 const DEEPSEEK_HOME_URL = `${DEEPSEEK_ORIGIN}/`
+const KIMI_ORIGIN = 'https://www.kimi.com'
+const KIMI_HOME_URL = `${KIMI_ORIGIN}/chat/`
+const KIMI_HOSTS = new Set(['www.kimi.com', 'kimi.com'])
 
 interface ChatSiteStartUrlRole {
   chatSite?: ChatSite
@@ -36,7 +39,7 @@ export function getSafeGeminiIframeSrc(value: string | undefined): string {
 }
 
 export function isSafeSupportedChatUrl(value: string | undefined): value is string {
-  return isSafeGeminiUrl(value) || isSafeChatGptUrl(value) || isSafeClaudeUrl(value) || isSafeDeepSeekUrl(value)
+  return isSafeGeminiUrl(value) || isSafeChatGptUrl(value) || isSafeClaudeUrl(value) || isSafeDeepSeekUrl(value) || isSafeKimiUrl(value)
 }
 
 export function getSafeSupportedChatUrl(value: string | undefined): string {
@@ -51,6 +54,7 @@ export function getDefaultChatSiteUrl(site: ChatSite | undefined): string {
   if (site === 'chatgpt') return CHATGPT_HOME_URL
   if (site === 'claude') return CLAUDE_HOME_URL
   if (site === 'deepseek') return DEEPSEEK_HOME_URL
+  if (site === 'kimi') return KIMI_HOME_URL
   return GEMINI_HOME_URL
 }
 
@@ -86,7 +90,8 @@ export function extractSupportedConversationId(value: string | undefined): strin
     extractGeminiConversationId(value) ??
     extractChatGptConversationId(value) ??
     extractClaudeConversationId(value) ??
-    extractDeepSeekConversationId(value)
+    extractDeepSeekConversationId(value) ??
+    extractKimiConversationId(value)
   )
 }
 
@@ -100,6 +105,7 @@ export function getSupportedChatOriginForSite(value: string | undefined, site: C
   if (site === 'chatgpt') return CHATGPT_ORIGIN
   if (site === 'claude') return CLAUDE_ORIGIN
   if (site === 'deepseek') return DEEPSEEK_ORIGIN
+  if (site === 'kimi') return KIMI_ORIGIN
   return GEMINI_ORIGIN
 }
 
@@ -179,6 +185,26 @@ function extractDeepSeekConversationId(value: string | undefined): string | unde
 
   const url = new URL(value)
   const match = url.pathname.match(/^\/a\/chat\/s\/([^/]+)/)
+  const conversationId = match?.[1]
+  return conversationId ? decodeURIComponent(conversationId) : undefined
+}
+
+function isSafeKimiUrl(value: string | undefined): value is string {
+  if (!value) return false
+
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && KIMI_HOSTS.has(url.hostname)
+  } catch {
+    return false
+  }
+}
+
+function extractKimiConversationId(value: string | undefined): string | undefined {
+  if (!isSafeKimiUrl(value)) return undefined
+
+  const url = new URL(value)
+  const match = url.pathname.match(/^\/chat\/([^/]+)/)
   const conversationId = match?.[1]
   return conversationId ? decodeURIComponent(conversationId) : undefined
 }
