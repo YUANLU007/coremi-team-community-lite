@@ -51,6 +51,13 @@ describe('parseGroupMentions', () => {
       mentionedRoleIds: ['role-eng', 'role-pm'],
     })
   })
+
+  it('rejects a dangling mention instead of silently recording it', () => {
+    expect(parseGroupMentions('请一起评估这个问题 @', roles, { defaultTarget: 'none' })).toEqual({
+      ok: false,
+      error: '请在 @ 后选择“所有人”或一位具体成员',
+    })
+  })
 })
 
 const roles: GroupRole[] = [

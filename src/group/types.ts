@@ -264,6 +264,7 @@ export interface GroupMessage {
   targetRoleIds?: string[]
   mentionedRoleIds?: string[]
   mentionsAll?: boolean
+  collaborationMode?: 'sequential'
   references?: MessageReference[]
   orchestrationRunId?: string
   orchestrationRound?: number

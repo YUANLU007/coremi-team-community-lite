@@ -70,6 +70,96 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
   const externalModelRuns = deps.externalModelRuns ?? createExternalModelRunRegistry()
   const roleErrorRetryCounts = new Map<string, number>()
 
+  const advanceCollaborativeMessage = async (chatId: string, messageId: string): Promise<OpenTeamStore | undefined> => {
+    const timestamp = deps.now()
+    const { store, result } = await mutateStore(store => {
+      const chat = requireChat(store, chatId)
+      const userMessage = store.messagesById[messageId]
+      if (userMessage?.type !== 'user' || userMessage.collaborationMode !== 'sequential') {
+        return { kind: 'not-collaborative' as const }
+      }
+
+      const targetRoleIds = userMessage.targetRoleIds ?? []
+      const hasActiveRole = targetRoleIds.some(roleId => {
+        const role = store.rolesById[roleId]
+        const status = userMessage.deliveryStatus?.[roleId]
+        return role?.lastPromptMessageId === messageId && (status === 'pending' || status === 'sent')
+      })
+      if (hasActiveRole) return { kind: 'waiting' as const }
+
+      const roles = getChatRoles(store, chat)
+      const messages = getChatMessages(store, chat)
+      const reference = userMessage.references?.[0]
+      for (const roleId of targetRoleIds) {
+        if (userMessage.deliveryStatus?.[roleId] !== 'pending') continue
+        const role = store.rolesById[roleId]
+        if (!role || role.chatId !== chat.id) {
+          if (userMessage.deliveryStatus) userMessage.deliveryStatus[roleId] = 'error'
+          continue
+        }
+
+        const available = isExternalModelRole(role)
+          ? Boolean(getExternalModelForRole(store, role))
+          : isRoleDeliverable(role, deps.runtimeFrames.getByRole(chat.id, role.id), timestamp)
+        if (!available) {
+          userMessage.deliveryStatus![role.id] = 'error'
+          role.status = 'error'
+          role.updatedAt = timestamp
+          continue
+        }
+
+        recoverDeliverableRoleStatus(role, timestamp, deps.log)
+        let prepared: PreparedRolePromptDelivery
+        try {
+          prepared = prepareRolePromptDelivery({ store, chat, role, userMessage, roles, messages, reference, timestamp, newId: deps.newId, runtimeFrames: deps.runtimeFrames })
+        } catch (error) {
+          userMessage.deliveryStatus![role.id] = 'error'
+          role.status = 'error'
+          role.updatedAt = timestamp
+          deps.log.warn('collaboration:prepare-failed', {
+            chatId,
+            messageId,
+            roleId: role.id,
+            error: error instanceof Error ? error.message : String(error),
+          })
+          continue
+        }
+
+        role.status = 'thinking'
+        role.lastPromptMessageId = userMessage.id
+        role.replyAttemptId = prepared.replyAttemptId
+        role.updatedAt = timestamp
+        chat.status = 'running'
+        chat.updatedAt = timestamp
+        updateUserMessageDeliveryStatus(userMessage)
+        return { kind: 'delivery' as const, role, prepared }
+      }
+
+      updateUserMessageDeliveryStatus(userMessage)
+      chat.status = deps.getChatStatusFromRoles(store, chat)
+      chat.updatedAt = timestamp
+      return { kind: 'done' as const }
+    })
+
+    if (result.kind === 'not-collaborative' || result.kind === 'waiting') return store
+    await deps.broadcastStoreUpdated(store)
+    if (result.kind === 'done') return store
+
+    deps.log.info('collaboration:advance', {
+      chatId,
+      messageId,
+      roleId: result.role.id,
+      modelSource: result.prepared.externalDelivery ? 'external' : 'site',
+    })
+    if (result.prepared.externalDelivery) {
+      await sendExternalModelDelivery(deps, externalModelClient, externalModelRuns, result.prepared.externalDelivery)
+      return advanceCollaborativeMessage(chatId, messageId)
+    }
+
+    await enqueuePromptDelivery(deps, chatId, messageId, result.prepared.delivery)
+    return advanceCollaborativeMessage(chatId, messageId)
+  }
+
   const handleMessageSend = async (message: RuntimeMessage) => {
     const chatId = requireString(message.chatId, '缺少群聊 ID')
     const raw = requireString(message.raw, '消息内容不能为空')
@@ -132,6 +222,7 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
         targetRoleIds: parsed.targetRoleIds,
         mentionedRoleIds: parsed.mentionedRoleIds,
         mentionsAll: parsed.mentionsAll,
+        ...(chat.mode === 'collaborative' && deliverableTargetRoles.length > 1 ? { collaborationMode: 'sequential' as const } : {}),
         attachments,
         references: reference ? [reference] : undefined,
         createdAt: timestamp,
@@ -154,7 +245,10 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
       const messages = getChatMessages(store, chat)
       const deliveries: PromptDelivery[] = []
       const externalDeliveries: ExternalPromptDelivery[] = []
-      for (const role of deliverableTargetRoles) {
+      const rolesToStart = userMessage.collaborationMode === 'sequential'
+        ? deliverableTargetRoles.slice(0, 1)
+        : deliverableTargetRoles
+      for (const role of rolesToStart) {
         const prepared = prepareRolePromptDelivery({ store, chat, role, userMessage, roles, messages, reference, timestamp, newId: deps.newId, runtimeFrames: deps.runtimeFrames })
         if (prepared.delivery) deliveries.push(prepared.delivery)
         if (prepared.externalDelivery) externalDeliveries.push(prepared.externalDelivery)
@@ -200,6 +294,9 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
     let responseStore = store
     for (const delivery of result.externalDeliveries) {
       responseStore = await sendExternalModelDelivery(deps, externalModelClient, externalModelRuns, delivery) ?? responseStore
+    }
+    if (result.message.collaborationMode === 'sequential') {
+      responseStore = await advanceCollaborativeMessage(chatId, result.message.id) ?? responseStore
     }
 
     return {
@@ -592,7 +689,10 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
     if (promptMessageId) clearRoleErrorRetryCount(roleErrorRetryCounts, identity.chatId, identity.roleId, promptMessageId)
     if (promptMessageId) await deps.promptDeliveryLimiter?.complete(identity.chatId, promptMessageId, identity.roleId)
     if (promptMessageId) await maybeAdvanceOrchestrationRun(deps, { chatId: identity.chatId, roleId: identity.roleId, promptMessageId, replyMessage: result.reply })
-    return { ok: true, message: result.reply, store }
+    const responseStore = promptMessageId
+      ? await advanceCollaborativeMessage(identity.chatId, promptMessageId) ?? store
+      : store
+    return { ok: true, message: result.reply, store: responseStore }
   }
 
   const handleRoleReplyResync = async (message: RuntimeMessage, sender: chrome.runtime.MessageSender) => {
@@ -679,7 +779,10 @@ export function createMessageHandlers(deps: MessageHandlersDependencies): Backgr
     if (promptMessageId) clearRoleErrorRetryCount(roleErrorRetryCounts, identity.chatId, identity.roleId, promptMessageId)
     if (promptMessageId) await deps.promptDeliveryLimiter?.complete(identity.chatId, promptMessageId, identity.roleId)
     if (promptMessageId) await markOrchestrationRoleError(deps, { chatId: identity.chatId, roleId: identity.roleId, promptMessageId, error: reason })
-    return { ok: true, store }
+    const responseStore = promptMessageId
+      ? await advanceCollaborativeMessage(identity.chatId, promptMessageId) ?? store
+      : store
+    return { ok: true, store: responseStore }
   }
 
   return [

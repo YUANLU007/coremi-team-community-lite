@@ -536,6 +536,44 @@ describe('background group chat experience handlers', () => {
     expect(promptRoleIds(harness)).toEqual(roleIds)
   })
 
+  it('runs collaborative room members in sequence with the previous reply in context', async () => {
+    const store = makeStore()
+    store.currentChatId = 'chat-1'
+    store.chatsById['chat-1'] = { ...makeChat('chat-1', ['role-1', 'role-2']), mode: 'collaborative' }
+    store.chatOrder = ['chat-1']
+    store.rolesById['role-1'] = makeRole('chat-1', 'role-1', '研究员')
+    store.rolesById['role-2'] = makeRole('chat-1', 'role-2', '审稿人')
+    const harness = await setupBackground(store)
+
+    await harness.invoke({ type: 'TEAM_FRAME_ROLE_READY', chatId: 'chat-1', roleId: 'role-1', hostTabId: 900 }, { tab: { id: 101 } as chrome.tabs.Tab, frameId: 7, url: 'https://gemini.google.com/app/researcher' })
+    await harness.invoke({ type: 'TEAM_FRAME_ROLE_READY', chatId: 'chat-1', roleId: 'role-2', hostTabId: 900 }, { tab: { id: 102 } as chrome.tabs.Tab, frameId: 8, url: 'https://gemini.google.com/app/reviewer' })
+
+    const sent = await harness.invoke({ type: 'GROUP_MESSAGE_SEND', chatId: 'chat-1', raw: '@所有人 请协作评估这个结论' }) as { ok: boolean; message: { id: string } }
+
+    expect(sent.ok).toBe(true)
+    expect(promptRoleIds(harness)).toEqual(['role-1'])
+
+    await harness.invoke({
+      type: 'TEAM_ROLE_REPLY',
+      chatId: 'chat-1',
+      roleId: 'role-1',
+      messageId: sent.message.id,
+      content: '研究员先给出的关键判断',
+    })
+
+    expect(promptRoleIds(harness)).toEqual(['role-1', 'role-2'])
+    const secondPrompt = harness.tabsSendMessage.mock.calls
+      .map(call => call[1])
+      .filter(message => message?.type === 'TEAM_SEND_PROMPT')[1]
+    expect(secondPrompt.content).toContain('研究员先给出的关键判断')
+    expect(secondPrompt.content).toContain('你可以参考、补充或反驳其他成员观点')
+
+    const current = await harness.getStore()
+    expect(current.messagesById[sent.message.id].collaborationMode).toBe('sequential')
+    expect(current.rolesById['role-1'].status).toBe('ready')
+    expect(current.rolesById['role-2'].status).toBe('thinking')
+  })
+
   it('marks delivery error when a prompt response is explicitly rejected', async () => {
     vi.useFakeTimers()
     try {

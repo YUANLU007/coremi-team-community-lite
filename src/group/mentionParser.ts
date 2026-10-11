@@ -82,6 +82,9 @@ export function parseGroupMentions(raw: string, roles: GroupRole[], options: Par
 
   const parsedContent = compactContent(content)
   if (!parsedContent) return { ok: false, error: 'Message cannot be empty' }
+  if (!targetsAll && targetRoleIds.size === 0 && /(^|\s)@\s*$/.test(trimmed)) {
+    return { ok: false, error: '请在 @ 后选择“所有人”或一位具体成员' }
+  }
 
   return {
     ok: true,
